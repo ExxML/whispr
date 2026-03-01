@@ -55,7 +55,8 @@ from core.win32_hook import (
     MOD_CTRL,
 )
 ```
-Use **relative imports** (`from .chat_bubble import ChatBubble`) for modules within the same package. Use **absolute imports** (`from core.ai_receiver import AIReceiver`) for cross-package references. Never use wildcard/star imports.
+Use **absolute imports** (ex. `from core.ai_receiver import AIReceiver`) for all imports, regardless of whether it is in the same module or cross-module.
+Never use wildcard/star imports.
 
 ### Class and Function/Method Definitions Grouping
 All public classes/functions/methods must be defined before private ones. Additionally, keep related functions/methods together, e.g., all GUI setup functions together.
