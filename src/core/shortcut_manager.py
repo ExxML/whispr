@@ -6,6 +6,7 @@ import threading
 from PyQt6.QtCore import QObject, QPoint, QTimer, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
+from core.screenshot_manager import ScreenshotManager
 from core.win32_hook import (
     HOOKPROC,
     KBDLLHOOKSTRUCT,
@@ -27,6 +28,7 @@ from core.win32_hook import (
     kernel32,
     user32,
 )
+from ui.main_window import MainWindow
 
 
 class ShortcutManager(QObject):
@@ -48,7 +50,7 @@ class ShortcutManager(QObject):
     toggle_signal = pyqtSignal()
     send_message_signal = pyqtSignal(str)
 
-    def __init__(self, main_window, screenshot_manager) -> None:
+    def __init__(self, main_window: MainWindow, screenshot_manager: ScreenshotManager) -> None:
         super().__init__()
         self.main_window = main_window
         self.screenshot_manager = screenshot_manager
@@ -214,10 +216,6 @@ class ShortcutManager(QObject):
 
     # Hotkey Callback Functions
 
-    def _toggle_window_visibility(self) -> None:
-        """Toggle main window visibility"""
-        self.toggle_signal.emit()
-
     def _setup_movement_distances(self) -> None:
         """Determine screen geometry and movement distances"""
         self.screen_rect = QApplication.primaryScreen().availableGeometry()
@@ -256,6 +254,10 @@ class ShortcutManager(QObject):
             current_x = int(self.animation_start_pos.x() + (self.animation_target_pos.x() - self.animation_start_pos.x()) * ease_progress)
             current_y = int(self.animation_start_pos.y() + (self.animation_target_pos.y() - self.animation_start_pos.y()) * ease_progress)
             self.main_window.move(current_x, current_y)
+
+    def _toggle_window_visibility(self) -> None:
+        """Toggle main window visibility"""
+        self.toggle_signal.emit()
 
     def _move_window_left(self) -> None:
         """Move main window left"""

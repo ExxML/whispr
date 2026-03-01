@@ -9,11 +9,11 @@ class InputBar(QWidget):
     # Signal emitted when a message is sent
     message_sent = pyqtSignal(str)
 
-    def __init__(self, main_window) -> None:
+    def __init__(self, main_window: QWidget) -> None:
         super().__init__(main_window)
-        self._initUI()
+        self._init_UI()
 
-    def _initUI(self) -> None:
+    def _init_UI(self) -> None:
         """Initialize the input bar UI layout and text field."""
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(0, 0, 0, 0)

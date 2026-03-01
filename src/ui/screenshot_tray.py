@@ -2,6 +2,8 @@ from PyQt6.QtCore import QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QPixmap
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
+from core.screenshot_manager import ScreenshotManager
+
 
 PREVIEW_WIDTH = 80
 PREVIEW_HEIGHT = 45
@@ -14,7 +16,7 @@ class ScreenshotThumbnail(QWidget):
 
     removed = pyqtSignal(str)
 
-    def __init__(self, path: str, screenshot_tray) -> None:
+    def __init__(self, path: str, screenshot_tray: QWidget) -> None:
         super().__init__(screenshot_tray)
         self.path = path
         # Extra BTN_OVERHANG pixels on top and right let the X button protrude outside the image
@@ -70,7 +72,7 @@ class ScreenshotTray(QWidget):
 
     visibility_changed = pyqtSignal()
 
-    def __init__(self, screenshot_manager, main_window) -> None:
+    def __init__(self, screenshot_manager: ScreenshotManager, main_window: QWidget) -> None:
         super().__init__(main_window)
         self.screenshot_manager = screenshot_manager
 
@@ -87,6 +89,17 @@ class ScreenshotTray(QWidget):
         self.setVisible(False)
 
         screenshot_manager.screenshot_added.connect(self._add_thumbnail)
+
+    def clear(self) -> None:
+        """Remove all thumbnails and hide the tray."""
+        layout = self.layout()
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget() if item else None
+            if widget:
+                widget.deleteLater()
+        self.setVisible(False)
+        self.visibility_changed.emit()
 
     def _add_thumbnail(self, path: str) -> None:
         """Add a thumbnail for a newly captured screenshot.
@@ -120,14 +133,3 @@ class ScreenshotTray(QWidget):
         if layout.count() == 0:
             self.setVisible(False)
             self.visibility_changed.emit()
-
-    def clear(self) -> None:
-        """Remove all thumbnails and hide the tray."""
-        layout = self.layout()
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget() if item else None
-            if widget:
-                widget.deleteLater()
-        self.setVisible(False)
-        self.visibility_changed.emit()

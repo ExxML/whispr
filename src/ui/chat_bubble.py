@@ -9,29 +9,52 @@ from ui.ai_formatter import format_message
 
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
-    
     def __init__(self, message: str, is_user: bool = False) -> None:
         super().__init__()
         self.message = message
         self.is_user = is_user
-        self._initUI()
-    
-    def _initUI(self) -> None:
+        self._init_UI()
+
+    def set_bot_message(self, message: str) -> None:
+        """Format the bot message and set the text as the label.
+
+        Args:
+            message (str): The raw bot message text to format and display.
+        """
+        self.message = message
+        self.message_label.setText(format_message(message))
+
+    def start_loading_animation(self) -> None:
+        """Start the animated three-dot loading indicator."""
+        self._loading_frame = 0
+        self._loading_timer = QTimer(self)
+        self._loading_timer.timeout.connect(self._tick_loading)
+        self._loading_timer.start(80)
+        self._tick_loading()
+
+    def stop_loading_animation(self) -> None:
+        """Stop the loading animation and clean up the timer."""
+        if hasattr(self, "_loading_timer") and self._loading_timer is not None:
+            self._loading_timer.stop()
+            self._loading_timer.deleteLater()
+            self._loading_timer = None
+
+    def _init_UI(self) -> None:
         """Initialize the chat bubble UI layout and styling."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(10, 5, 10, 5)
-        
+
         # Create message label with HTML formatting
         # Default formatting for user message only (bot message uses formatting in set_bot_message)
         html_message = f'<div style="line-height: 1.4; white-space: pre-wrap;">{self.message}</div>'
         self.message_label = QLabel(html_message)
         self.message_label.setTextFormat(Qt.TextFormat.RichText)
         self.message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        
+
         # Set font
         font = QFont("Helvetica", 11)
         self.message_label.setFont(font)
-        
+
         # Style the bubble based on sender
         if self.is_user:
             # User messages: light gray, aligned right
@@ -70,25 +93,8 @@ class ChatBubble(QWidget):
             self.message_label.setFixedWidth(515)
             layout.addWidget(self.message_label)
             layout.addStretch()
-        
+
         layout.setSpacing(0)
-
-    def set_bot_message(self, message: str) -> None:
-        """Format the bot message and set the text as the label.
-
-        Args:
-            message (str): The raw bot message text to format and display.
-        """
-        self.message = message
-        self.message_label.setText(format_message(message))
-
-    def start_loading_animation(self) -> None:
-        """Start the animated three-dot loading indicator."""
-        self._loading_frame = 0
-        self._loading_timer = QTimer(self)
-        self._loading_timer.timeout.connect(self._tick_loading)
-        self._loading_timer.start(80)
-        self._tick_loading()
 
     def _tick_loading(self) -> None:
         """Advance the loading animation by one frame."""
@@ -118,10 +124,3 @@ class ChatBubble(QWidget):
         )
         self.message_label.setText(html)
         self._loading_frame = (self._loading_frame + 1) % 20
-
-    def stop_loading_animation(self) -> None:
-        """Stop the loading animation and clean up the timer."""
-        if hasattr(self, "_loading_timer") and self._loading_timer is not None:
-            self._loading_timer.stop()
-            self._loading_timer.deleteLater()
-            self._loading_timer = None

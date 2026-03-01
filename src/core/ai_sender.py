@@ -9,7 +9,7 @@ from google.genai import types
 from google.genai.chats import Chat
 
 
-MODEL = "gemini-3-flash-preview"
+MODEL = "gemini-2.5-flash"
 CONFIG = types.GenerateContentConfig(
     thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disable thinking mode for faster responses
 )
@@ -26,14 +26,6 @@ class AISender():
         # Initialize Gemini client and start a chat session
         self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         self.chat = self._create_chat()
-
-    def _create_chat(self) -> Chat:
-        """Create a new Gemini chat session.
-
-        Returns:
-            Chat: A new chat session instance.
-        """
-        return self.client.chats.create(model=MODEL, config=CONFIG)
 
     def reset_chat(self) -> None:
         """Reset the chat session, clearing all conversation history."""
@@ -77,3 +69,11 @@ class AISender():
                         pass
 
         return full_response
+
+    def _create_chat(self) -> Chat:
+        """Create a new Gemini chat session.
+
+        Returns:
+            Chat: A new chat session instance.
+        """
+        return self.client.chats.create(model=MODEL, config=CONFIG)

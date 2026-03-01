@@ -10,6 +10,8 @@ from .clear_chat_button import ClearChatButton
 from .input_bar import InputBar
 from .screenshot_tray import ScreenshotTray
 from core.ai_receiver import AIReceiver
+from core.ai_sender import AISender
+from core.screenshot_manager import ScreenshotManager
 
 
 class MainWindow(QWidget):
@@ -17,14 +19,80 @@ class MainWindow(QWidget):
 
     BG_COLOR = QColor(20, 20, 20, 153)
 
-    def __init__(self, ai_sender, screenshot_manager) -> None:
+    def __init__(self, ai_sender: AISender, screenshot_manager: ScreenshotManager) -> None:
         super().__init__()
         self.ai_sender = ai_sender
         self.screenshot_manager = screenshot_manager
-        self._initUI()
+        self._init_UI()
         self.worker = AIReceiver(ai_sender, self.chat_area)
-        
-    def _initUI(self) -> None:
+
+    def toggle_window_visibility(self) -> None:
+        """Toggle the main window between visible and hidden states."""
+        if self.isVisible():
+            self.hide()
+        else:
+            self.show()
+            self.raise_()  # Bring to front
+
+    def send_message(self, message: str) -> None:
+        """Send a user message with any pending screenshot attachments.
+
+        Args:
+            message (str): The user's message text.
+        """
+        attachments = self.screenshot_manager.get_and_clear_pending()
+        self.screenshot_tray.clear()
+        self.worker.handle_message(message, attachments or None)
+
+    def quit_app(self) -> None:
+        """Quit the application, stopping any active worker and clearing chat."""
+        # Stop any active worker
+        if self.worker is not None:
+            self.worker.stop()
+
+        self.chat_area.clear_chat()
+        self.ai_sender.reset_chat()
+        self.screenshot_manager.clear_screenshots()
+        app = QApplication.instance()
+        if app is not None:
+            app.quit()
+
+    def resizeEvent(self, event) -> None:
+        """Reposition the floating screenshot tray when the window is resized."""
+        super().resizeEvent(event)
+        self._position_screenshot_tray()
+
+    # Override mousePressEvent to automatically set focus to input field
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        """Handle mouse press events by setting focus to the input field.
+
+        Args:
+            event (QMouseEvent): The mouse press event.
+        """
+        self.input_bar.input_field.setFocus()
+        super().mousePressEvent(event)
+
+    # Override paintEvent to draw app window
+    def paintEvent(self, _event) -> None:
+        """Paint the main window with rounded corners and a border."""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        rect = self.rect()
+        radius = 8
+
+        # Draw window with rounded corners
+        painter.setBrush(self.BG_COLOR)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(rect, radius, radius)
+
+        # Draw window border
+        border_width = 1
+        border_rect = rect.adjusted(border_width, border_width, -border_width, -border_width)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(QColor(255, 255, 255, int(255 * 0.15)), border_width))
+        painter.drawRoundedRect(border_rect, radius, radius)
+
+    def _init_UI(self) -> None:
         """Initialize the main window UI layout and components."""
         # Config variables
         self.window_width = 550
@@ -40,23 +108,23 @@ class MainWindow(QWidget):
 
         # Translucent bg for rounded corners
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        
+
         # Prevent cursor from changing when hovering over the window
         self.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
         self.unsetCursor()
-        
+
         # Window setup (position main window at center-top on screen)
         screen_rect = QApplication.primaryScreen().availableGeometry()
         self.setGeometry((screen_rect.width() - self.window_width) // 2, 2, self.window_width, self.window_height)
-        
+
         # Create main layout
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        
+
         # Create chat area
-        self.chat_area = ChatArea(self)
-        
+        self.chat_area = ChatArea(self, self.BG_COLOR)
+
         # Create input bar
         self.input_bar = InputBar(self)
 
@@ -134,26 +202,21 @@ class MainWindow(QWidget):
 
         # Unset cursor for all child widgets to preserve system cursor
         self._unset_cursor_recursive(self)
-        
+
         self.show()
-        
+
         # Set display affinity to exclude main window from screen capture (Windows 10+)
         hwnd = int(self.winId())
         WDA_EXCLUDEFROMCAPTURE = 0x00000011
         result = ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
         if result == 0:
             print("Warning: SetWindowDisplayAffinity failed. May appear in screenshots.")
-        
+
         # Setup timer to raise main window so it is always visible (certain Windows operations override the stay on top hint)
         self.visibility_timer = QTimer(self)
         self.visibility_timer.setInterval(1000)
         self.visibility_timer.timeout.connect(self._ensure_window_visible)
         self.visibility_timer.start()
-
-    def resizeEvent(self, event) -> None:
-        """Reposition the floating screenshot tray when the window is resized."""
-        super().resizeEvent(event)
-        self._position_screenshot_tray()
 
     def _position_screenshot_tray(self) -> None:
         """Place the screenshot tray above the input bar, floating over the chat area."""
@@ -217,64 +280,3 @@ class MainWindow(QWidget):
             return True
         except Exception:
             return True
-
-    def toggle_window_visibility(self) -> None:
-        """Toggle the main window between visible and hidden states."""
-        if self.isVisible():
-            self.hide()
-        else:
-            self.show()
-            self.raise_()  # Bring to front
-
-    def send_message(self, message: str) -> None:
-        """Send a user message with any pending screenshot attachments.
-
-        Args:
-            message (str): The user's message text.
-        """
-        attachments = self.screenshot_manager.get_and_clear_pending()
-        self.screenshot_tray.clear()
-        self.worker.handle_message(message, attachments or None)
-
-    def quit_app(self) -> None:
-        """Quit the application, stopping any active worker and clearing chat."""
-        # Stop any active worker
-        if self.worker is not None:
-            self.worker.stop()
-
-        self.chat_area.clear_chat()
-        self.ai_sender.reset_chat()
-        self.screenshot_manager.clear_screenshots()
-        app = QApplication.instance()
-        if app is not None:
-            app.quit()
-
-    # Override mousePressEvent to automatically set focus to input field
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        """Handle mouse press events by setting focus to the input field.
-
-        Args:
-            event (QMouseEvent): The mouse press event.
-        """
-        self.input_bar.input_field.setFocus()
-        super().mousePressEvent(event)
-
-    # Override paintEvent to draw app window
-    def paintEvent(self, _event) -> None:
-        """Paint the main window with rounded corners and a border."""
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = self.rect()
-        radius = 8
-        
-        # Draw window with rounded corners
-        painter.setBrush(self.BG_COLOR)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRoundedRect(rect, radius, radius)
-        
-        # Draw window border
-        border_width = 1
-        border_rect = rect.adjusted(border_width, border_width, -border_width, -border_width)
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPen(QPen(QColor(255, 255, 255, int(255 * 0.15)), border_width))
-        painter.drawRoundedRect(border_rect, radius, radius)
