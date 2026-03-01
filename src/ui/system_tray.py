@@ -3,7 +3,7 @@ import os
 from PyQt6.QtGui import QAction, QIcon
 from PyQt6.QtWidgets import QMenu, QSystemTrayIcon
 
-from .main_window import MainWindow
+from ui.main_window import MainWindow
 from core.shortcut_manager import ShortcutManager
 
 

@@ -8,7 +8,7 @@ from PyQt6.QtCore import (
 from PyQt6.QtGui import QColor, QLinearGradient, QPainter
 from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
-from .chat_bubble import ChatBubble
+from ui.chat_bubble import ChatBubble
 
 FADE_HEIGHT = 20
 

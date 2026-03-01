@@ -5,7 +5,7 @@ from PyQt6.QtCore import QEvent, QSize
 from PyQt6.QtGui import QEnterEvent, QIcon
 from PyQt6.QtWidgets import QPushButton, QWidget
 
-from .chat_area import ChatArea
+from ui.chat_area import ChatArea
 
 
 class ClearChatButton(QPushButton):
