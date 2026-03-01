@@ -33,7 +33,7 @@ from ui.main_window import MainWindow
 
 class ShortcutManager(QObject):
     """Manages global keyboard shortcuts via a Win32 low-level keyboard hook.
-    
+
     All registered hotkeys are suppressed so other applications never see the
     key events. Conditional hotkeys (everything except the visibility toggle)
     are only active while the main window is visible.
@@ -50,13 +50,17 @@ class ShortcutManager(QObject):
     toggle_signal = pyqtSignal()
     send_message_signal = pyqtSignal(str)
 
-    def __init__(self, main_window: MainWindow, screenshot_manager: ScreenshotManager) -> None:
+    def __init__(
+        self, main_window: MainWindow, screenshot_manager: ScreenshotManager
+    ) -> None:
         super().__init__()
         self.main_window = main_window
         self.screenshot_manager = screenshot_manager
 
         # Connect signals
-        self.move_signal.connect(self._start_animation)  # Signal needed because QTimers cannot be started from another thread
+        self.move_signal.connect(
+            self._start_animation
+        )  # Signal needed because QTimers cannot be started from another thread
         self.scroll_signal.connect(self.main_window.chat_area.shortcut_scroll)
         self.quit_signal.connect(self.main_window.quit_app)
         self.screenshot_signal.connect(self.screenshot_manager.take_screenshot)
@@ -221,7 +225,9 @@ class ShortcutManager(QObject):
         self.screen_rect = QApplication.primaryScreen().availableGeometry()
         self.max_move_distance_x = self.screen_rect.width() // 14
         self.max_move_distance_y = self.screen_rect.height() // 14
-        self.screen_bounds_offset = 2  # Always keep 2 pixels to screen edge to prevent setGeometry errors
+        self.screen_bounds_offset = (
+            2  # Always keep 2 pixels to screen edge to prevent setGeometry errors
+        )
         self.animation_duration = 100  # Animation duration in milliseconds
         self.animation_fps = 120  # Frames per second
         self.animation_frame_time = 1000 // self.animation_fps  # Time per frame in ms
@@ -251,8 +257,16 @@ class ShortcutManager(QObject):
         else:
             # Ease-out sine motion: sin(t * π/2)
             ease_progress = math.sin(self.animation_progress * math.pi / 2)
-            current_x = int(self.animation_start_pos.x() + (self.animation_target_pos.x() - self.animation_start_pos.x()) * ease_progress)
-            current_y = int(self.animation_start_pos.y() + (self.animation_target_pos.y() - self.animation_start_pos.y()) * ease_progress)
+            current_x = int(
+                self.animation_start_pos.x()
+                + (self.animation_target_pos.x() - self.animation_start_pos.x())
+                * ease_progress
+            )
+            current_y = int(
+                self.animation_start_pos.y()
+                + (self.animation_target_pos.y() - self.animation_start_pos.y())
+                * ease_progress
+            )
             self.main_window.move(current_x, current_y)
 
     def _toggle_window_visibility(self) -> None:
@@ -263,14 +277,21 @@ class ShortcutManager(QObject):
         """Move main window left"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        new_x = max(self.screen_bounds_offset, self.main_window.geometry().x() - self.max_move_distance_x)
+        new_x = max(
+            self.screen_bounds_offset,
+            self.main_window.geometry().x() - self.max_move_distance_x,
+        )
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
     def _move_window_right(self) -> None:
         """Move main window right"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        max_x = self.screen_rect.width() - self.main_window.geometry().width() - self.screen_bounds_offset
+        max_x = (
+            self.screen_rect.width()
+            - self.main_window.geometry().width()
+            - self.screen_bounds_offset
+        )
         new_x = min(max_x, self.main_window.geometry().x() + self.max_move_distance_x)
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
@@ -278,14 +299,21 @@ class ShortcutManager(QObject):
         """Move main window up"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        new_y = max(self.screen_bounds_offset, self.main_window.geometry().y() - self.max_move_distance_y)
+        new_y = max(
+            self.screen_bounds_offset,
+            self.main_window.geometry().y() - self.max_move_distance_y,
+        )
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
     def _move_window_down(self) -> None:
         """Move main window down"""
         if self.animation_active and self.animation_progress < 0.5:
             return
-        max_y = self.screen_rect.height() - self.main_window.geometry().height() - self.screen_bounds_offset
+        max_y = (
+            self.screen_rect.height()
+            - self.main_window.geometry().height()
+            - self.screen_bounds_offset
+        )
         new_y = min(max_y, self.main_window.geometry().y() + self.max_move_distance_y)
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
@@ -317,7 +345,7 @@ class ShortcutManager(QObject):
         """Take a screenshot then automatically generate content."""
         self.screenshot_manager.take_screenshot()
         self.send_message_signal.emit(
-"""Help me solve this programming problem. Be concise.
+            """Help me solve this programming problem. Be concise.
 1. Give me 5 clarification questions to ask about the problem.
 2. State the type of problem (ex. Arrays & Hashing, Two Pointers, Sliding Window, Stack, Binary Search, Linked List, Trees, Heap / Priority Queue, Backtracking, Tries, Graphs, Advanced Graphs, 1-D Dynamic Programming, 2-D Dynamic Programming, Greedy, Intervals, Math & Geometry, and/or Bit Manipulation), data structure(s), what each element in the data structure means, and algorithm(s) used to solve this problem.
 3. Give me a high-level, point-form plan to approach and solve this problem (including edge cases).

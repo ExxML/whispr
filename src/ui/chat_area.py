@@ -1,4 +1,10 @@
-from PyQt6.QtCore import QAbstractAnimation, QEasingCurve, QPropertyAnimation, Qt, QTimer
+from PyQt6.QtCore import (
+    QAbstractAnimation,
+    QEasingCurve,
+    QPropertyAnimation,
+    Qt,
+    QTimer,
+)
 from PyQt6.QtGui import QColor, QLinearGradient, QPainter
 from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
@@ -25,7 +31,9 @@ class ChatArea(QScrollArea):
         x = vp.x() + 2
         w = max(0, vp.width() - 4)
         self._top_fade.setGeometry(x, vp.y(), w, FADE_HEIGHT)
-        self._bottom_fade.setGeometry(x, vp.y() + vp.height() - FADE_HEIGHT, w, FADE_HEIGHT)
+        self._bottom_fade.setGeometry(
+            x, vp.y() + vp.height() - FADE_HEIGHT, w, FADE_HEIGHT
+        )
         self._top_fade.raise_()
         self._bottom_fade.raise_()
 
@@ -55,7 +63,9 @@ class ChatArea(QScrollArea):
 
         # Force scroll to bottom after a delay
         if is_user:
-            QTimer.singleShot(400, lambda: self._animate_to(self.verticalScrollBar().maximum(), 100))
+            QTimer.singleShot(
+                400, lambda: self._animate_to(self.verticalScrollBar().maximum(), 100)
+            )
 
     def start_assistant_stream(self) -> None:
         """Create an assistant bubble to stream content into (not saved until finalized)."""
@@ -183,7 +193,9 @@ class ChatArea(QScrollArea):
 
     def _init_scroll_animation(self) -> None:
         """Initialize smooth scrolling animation."""
-        self.scroll_animation = QPropertyAnimation(self.verticalScrollBar(), b"value", self)
+        self.scroll_animation = QPropertyAnimation(
+            self.verticalScrollBar(), b"value", self
+        )
         self.scroll_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
 
     def _update_fades(self) -> None:

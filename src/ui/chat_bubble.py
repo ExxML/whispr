@@ -9,6 +9,7 @@ from ui.ai_formatter import format_message
 
 class ChatBubble(QWidget):
     """A chat bubble widget for displaying messages"""
+
     def __init__(self, message: str, is_user: bool = False) -> None:
         super().__init__()
         self.message = message
@@ -49,7 +50,9 @@ class ChatBubble(QWidget):
         html_message = f'<div style="line-height: 1.4; white-space: pre-wrap;">{self.message}</div>'
         self.message_label = QLabel(html_message)
         self.message_label.setTextFormat(Qt.TextFormat.RichText)
-        self.message_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.message_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
 
         # Set font
         font = QFont("Helvetica", 11)
@@ -116,11 +119,11 @@ class ChatBubble(QWidget):
         o3 = dot_opacity(4 * math.pi / 3)
 
         html = (
-            f'<span style="color: rgba(255, 255, 255, {o1:.2f}); font-size: 16px;">&#9679;</span>'
-            f'&nbsp;'
-            f'<span style="color: rgba(255, 255, 255, {o2:.2f}); font-size: 16px;">&#9679;</span>'
-            f'&nbsp;'
-            f'<span style="color: rgba(255, 255, 255, {o3:.2f}); font-size: 16px;">&#9679;</span>'
+            f"<span style='color: rgba(255, 255, 255, {o1:.2f}); font-size: 16px;'>&#9679;</span>"
+            f"&nbsp;"
+            f"<span style='color: rgba(255, 255, 255, {o2:.2f}); font-size: 16px;'>&#9679;</span>"
+            f"&nbsp;"
+            f"<span style='color: rgba(255, 255, 255, {o3:.2f}); font-size: 16px;'>&#9679;</span>"
         )
         self.message_label.setText(html)
         self._loading_frame = (self._loading_frame + 1) % 20

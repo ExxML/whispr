@@ -29,7 +29,9 @@ class AIReceiver(QObject):
         self.finished.connect(self._on_response_ready)
         self.error.connect(self._on_response_error)
 
-    def handle_message(self, message: str, attachments: list[str] | None = None) -> None:
+    def handle_message(
+        self, message: str, attachments: list[str] | None = None
+    ) -> None:
         """Handle a user message by displaying it and starting AI generation.
 
         Args:
@@ -71,7 +73,9 @@ class AIReceiver(QObject):
     def _run(self) -> None:
         """Execute AI content generation and emit progress and completion signals."""
         try:
-            response = self.ai_sender.send_message(self.message, self.attachments, self._on_chunk)
+            response = self.ai_sender.send_message(
+                self.message, self.attachments, self._on_chunk
+            )
             # Only emit finished if we weren't stopped
             if not self._is_stopped():
                 self.finished.emit(response)

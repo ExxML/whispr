@@ -25,7 +25,8 @@ class ScreenshotThumbnail(QWidget):
         # Load and scale the image to fill the thumbnail dimensions
         src = QPixmap(path)
         self.pixmap = src.scaled(
-            PREVIEW_WIDTH, PREVIEW_HEIGHT,
+            PREVIEW_WIDTH,
+            PREVIEW_HEIGHT,
             Qt.AspectRatioMode.KeepAspectRatioByExpanding,
             Qt.TransformationMode.SmoothTransformation,
         ).copy(0, 0, PREVIEW_WIDTH, PREVIEW_HEIGHT)
@@ -58,13 +59,24 @@ class ScreenshotThumbnail(QWidget):
 
         # Image occupies the lower-left PREVIEW_WIDTH × PREVIEW_HEIGHT area; the top/right margins are for the button overhang
         clip = QPainterPath()
-        clip.addRoundedRect(0.0, float(BTN_OVERHANG), float(PREVIEW_WIDTH), float(PREVIEW_HEIGHT), 6.0, 6.0)
+        clip.addRoundedRect(
+            0.0,
+            float(BTN_OVERHANG),
+            float(PREVIEW_WIDTH),
+            float(PREVIEW_HEIGHT),
+            6.0,
+            6.0,
+        )
         painter.setClipPath(clip)
         painter.drawPixmap(0, BTN_OVERHANG, self.pixmap)
 
         painter.setClipping(False)
         painter.setPen(QPen(QColor(255, 255, 255, 60), 1.0))
-        painter.drawRoundedRect(QRectF(0.5, BTN_OVERHANG + 0.5, PREVIEW_WIDTH - 1.0, PREVIEW_HEIGHT - 1.0), 6.0, 6.0)
+        painter.drawRoundedRect(
+            QRectF(0.5, BTN_OVERHANG + 0.5, PREVIEW_WIDTH - 1.0, PREVIEW_HEIGHT - 1.0),
+            6.0,
+            6.0,
+        )
 
 
 class ScreenshotTray(QWidget):
@@ -72,7 +84,9 @@ class ScreenshotTray(QWidget):
 
     visibility_changed = pyqtSignal()
 
-    def __init__(self, screenshot_manager: ScreenshotManager, main_window: QWidget) -> None:
+    def __init__(
+        self, screenshot_manager: ScreenshotManager, main_window: QWidget
+    ) -> None:
         super().__init__(main_window)
         self.screenshot_manager = screenshot_manager
 
@@ -80,7 +94,9 @@ class ScreenshotTray(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 0, 12, 0)  # Extra right margin to avoid the scroll bar
+        layout.setContentsMargins(
+            12, 0, 12, 0
+        )  # Extra right margin to avoid the scroll bar
         layout.setSpacing(6)
         layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 

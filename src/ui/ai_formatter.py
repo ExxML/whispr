@@ -14,19 +14,24 @@ def format_message(message: str) -> str:
     formatted = message.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
     # Replace fenced code blocks with formatted HTML
-    formatted = re.sub(
-        r"```(.*?)```",
-        _format_code_block,
-        formatted,
-        flags=re.DOTALL
-    )
+    formatted = re.sub(r"```(.*?)```", _format_code_block, formatted, flags=re.DOTALL)
 
     # Format headers
-    formatted = re.sub(r"^#####\s+(.+?)(<br>|$)", r"<h5>\1</h5>", formatted, flags=re.MULTILINE)
-    formatted = re.sub(r"^####\s+(.+?)(<br>|$)",  r"<h4>\1</h4>", formatted, flags=re.MULTILINE)
-    formatted = re.sub(r"^###\s+(.+?)(<br>|$)",   r"<h3>\1</h3>", formatted, flags=re.MULTILINE)
-    formatted = re.sub(r"^##\s+(.+?)(<br>|$)",    r"<h2>\1</h2>", formatted, flags=re.MULTILINE)
-    formatted = re.sub(r"^#\s+(.+?)(<br>|$)",     r"<h1>\1</h1>", formatted, flags=re.MULTILINE)
+    formatted = re.sub(
+        r"^#####\s+(.+?)(<br>|$)", r"<h5>\1</h5>", formatted, flags=re.MULTILINE
+    )
+    formatted = re.sub(
+        r"^####\s+(.+?)(<br>|$)", r"<h4>\1</h4>", formatted, flags=re.MULTILINE
+    )
+    formatted = re.sub(
+        r"^###\s+(.+?)(<br>|$)", r"<h3>\1</h3>", formatted, flags=re.MULTILINE
+    )
+    formatted = re.sub(
+        r"^##\s+(.+?)(<br>|$)", r"<h2>\1</h2>", formatted, flags=re.MULTILINE
+    )
+    formatted = re.sub(
+        r"^#\s+(.+?)(<br>|$)", r"<h1>\1</h1>", formatted, flags=re.MULTILINE
+    )
 
     # Replace **text** with <b>text</b>
     formatted = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", formatted)
@@ -79,7 +84,12 @@ def _format_code_block(match: re.Match) -> str:
     code = code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
     # Colour comments in green
-    code = re.sub(r"(#.*?)(?=\n|$)", r'<span style="color: #749852;">\1</span>', code, flags=re.MULTILINE)
+    code = re.sub(
+        r"(#.*?)(?=\n|$)",
+        r"<span style='color: #749852;'>\1</span>",
+        code,
+        flags=re.MULTILINE,
+    )
 
     return (
         f"<div style='"

@@ -19,7 +19,9 @@ class MainWindow(QWidget):
 
     BG_COLOR = QColor(20, 20, 20, 153)
 
-    def __init__(self, ai_sender: AISender, screenshot_manager: ScreenshotManager) -> None:
+    def __init__(
+        self, ai_sender: AISender, screenshot_manager: ScreenshotManager
+    ) -> None:
         super().__init__()
         self.ai_sender = ai_sender
         self.screenshot_manager = screenshot_manager
@@ -87,7 +89,9 @@ class MainWindow(QWidget):
 
         # Draw window border
         border_width = 1
-        border_rect = rect.adjusted(border_width, border_width, -border_width, -border_width)
+        border_rect = rect.adjusted(
+            border_width, border_width, -border_width, -border_width
+        )
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(QPen(QColor(255, 255, 255, int(255 * 0.15)), border_width))
         painter.drawRoundedRect(border_rect, radius, radius)
@@ -100,9 +104,9 @@ class MainWindow(QWidget):
 
         # Set window flags for main window behavior
         self.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint |
-            Qt.WindowType.WindowStaysOnTopHint |
-            Qt.WindowType.Tool
+            Qt.WindowType.FramelessWindowHint
+            | Qt.WindowType.WindowStaysOnTopHint
+            | Qt.WindowType.Tool
             # Qt.WindowType.WindowTransparentForInput # Click-through
         )
 
@@ -115,7 +119,12 @@ class MainWindow(QWidget):
 
         # Window setup (position main window at center-top on screen)
         screen_rect = QApplication.primaryScreen().availableGeometry()
-        self.setGeometry((screen_rect.width() - self.window_width) // 2, 2, self.window_width, self.window_height)
+        self.setGeometry(
+            (screen_rect.width() - self.window_width) // 2,
+            2,
+            self.window_width,
+            self.window_height,
+        )
 
         # Create main layout
         main_layout = QVBoxLayout(self)
@@ -208,9 +217,13 @@ class MainWindow(QWidget):
         # Set display affinity to exclude main window from screen capture (Windows 10+)
         hwnd = int(self.winId())
         WDA_EXCLUDEFROMCAPTURE = 0x00000011
-        result = ctypes.windll.user32.SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)
+        result = ctypes.windll.user32.SetWindowDisplayAffinity(
+            hwnd, WDA_EXCLUDEFROMCAPTURE
+        )
         if result == 0:
-            print("Warning: SetWindowDisplayAffinity failed. May appear in screenshots.")
+            print(
+                "Warning: SetWindowDisplayAffinity failed. May appear in screenshots."
+            )
 
         # Setup timer to raise main window so it is always visible (certain Windows operations override the stay on top hint)
         self.visibility_timer = QTimer(self)
@@ -262,19 +275,23 @@ class MainWindow(QWidget):
             scale = screen.devicePixelRatio()
             ga_root = 2
             self_hwnd = int(self.winId())
-            self_root = ctypes.windll.user32.GetAncestor(wintypes.HWND(self_hwnd), ga_root)
+            self_root = ctypes.windll.user32.GetAncestor(
+                wintypes.HWND(self_hwnd), ga_root
+            )
             padding = 15
             corners = [
                 rect.topLeft() + QPoint(padding, padding),
                 rect.topRight() + QPoint(-padding, padding),
                 rect.bottomLeft() + QPoint(padding, -padding),
-                rect.bottomRight() + QPoint(-padding, -padding)
+                rect.bottomRight() + QPoint(-padding, -padding),
             ]
             for corner in corners:
                 pt = wintypes.POINT(int(corner.x() * scale), int(corner.y() * scale))
                 hwnd_at_pt = ctypes.windll.user32.WindowFromPoint(pt)
                 if hwnd_at_pt:
-                    target_root = ctypes.windll.user32.GetAncestor(wintypes.HWND(hwnd_at_pt), ga_root)
+                    target_root = ctypes.windll.user32.GetAncestor(
+                        wintypes.HWND(hwnd_at_pt), ga_root
+                    )
                     if int(self_root) != int(target_root):
                         return False
             return True

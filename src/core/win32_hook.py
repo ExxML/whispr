@@ -24,12 +24,20 @@ MOD_ALT = 0x02
 MOD_SHIFT = 0x04
 
 # All modifier virtual key codes (generic + left/right variants)
-MODIFIER_VK_CODES = frozenset({
-    VK_SHIFT, VK_CONTROL, VK_MENU,
-    0xA0, 0xA1, # VK_LSHIFT, VK_RSHIFT
-    0xA2, 0xA3, # VK_LCONTROL, VK_RCONTROL
-    0xA4, 0xA5, # VK_LMENU, VK_RMENU
-})
+MODIFIER_VK_CODES = frozenset(
+    {
+        VK_SHIFT,
+        VK_CONTROL,
+        VK_MENU,
+        0xA0,
+        0xA1,  # VK_LSHIFT, VK_RSHIFT
+        0xA2,
+        0xA3,  # VK_LCONTROL, VK_RCONTROL
+        0xA4,
+        0xA5,  # VK_LMENU, VK_RMENU
+    }
+)
+
 
 # Win32 structure for low-level keyboard hook data
 class KBDLLHOOKSTRUCT(ctypes.Structure):
@@ -41,27 +49,48 @@ class KBDLLHOOKSTRUCT(ctypes.Structure):
         ("dwExtraInfo", ctypes.POINTER(ctypes.c_ulong)),
     ]
 
+
 # Callback type for the low-level keyboard hook (LRESULT(nCode, wParam, lParam))
 HOOKPROC = ctypes.CFUNCTYPE(
-    ctypes.wintypes.LPARAM, # LRESULT return
-    ctypes.c_int,           # nCode
-    ctypes.wintypes.WPARAM, # wParam (message type)
-    ctypes.wintypes.LPARAM, # lParam (pointer to KBDLLHOOKSTRUCT)
+    ctypes.wintypes.LPARAM,  # LRESULT return
+    ctypes.c_int,  # nCode
+    ctypes.wintypes.WPARAM,  # wParam (message type)
+    ctypes.wintypes.LPARAM,  # lParam (pointer to KBDLLHOOKSTRUCT)
 )
 
 user32 = ctypes.windll.user32
 kernel32 = ctypes.windll.kernel32
 
 # Configure Win32 function signatures for type safety
-user32.SetWindowsHookExW.argtypes = [ctypes.c_int, HOOKPROC, ctypes.wintypes.HINSTANCE, ctypes.wintypes.DWORD]
+user32.SetWindowsHookExW.argtypes = [
+    ctypes.c_int,
+    HOOKPROC,
+    ctypes.wintypes.HINSTANCE,
+    ctypes.wintypes.DWORD,
+]
 user32.SetWindowsHookExW.restype = ctypes.c_void_p
 user32.UnhookWindowsHookEx.argtypes = [ctypes.c_void_p]
 user32.UnhookWindowsHookEx.restype = ctypes.wintypes.BOOL
-user32.CallNextHookEx.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM]
+user32.CallNextHookEx.argtypes = [
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.wintypes.WPARAM,
+    ctypes.wintypes.LPARAM,
+]
 user32.CallNextHookEx.restype = ctypes.wintypes.LPARAM
-user32.GetMessageW.argtypes = [ctypes.POINTER(ctypes.wintypes.MSG), ctypes.wintypes.HWND, ctypes.wintypes.UINT, ctypes.wintypes.UINT]
+user32.GetMessageW.argtypes = [
+    ctypes.POINTER(ctypes.wintypes.MSG),
+    ctypes.wintypes.HWND,
+    ctypes.wintypes.UINT,
+    ctypes.wintypes.UINT,
+]
 user32.GetMessageW.restype = ctypes.wintypes.BOOL
-user32.PostThreadMessageW.argtypes = [ctypes.wintypes.DWORD, ctypes.wintypes.UINT, ctypes.wintypes.WPARAM, ctypes.wintypes.LPARAM]
+user32.PostThreadMessageW.argtypes = [
+    ctypes.wintypes.DWORD,
+    ctypes.wintypes.UINT,
+    ctypes.wintypes.WPARAM,
+    ctypes.wintypes.LPARAM,
+]
 user32.PostThreadMessageW.restype = ctypes.wintypes.BOOL
 user32.GetAsyncKeyState.argtypes = [ctypes.c_int]
 user32.GetAsyncKeyState.restype = ctypes.c_short

@@ -11,7 +11,9 @@ from .chat_area import ChatArea
 class ClearChatButton(QPushButton):
     """Button in the title bar to clear the chat history."""
 
-    def __init__(self, main_window: QWidget, on_click: Callable[[], None], chat_area: ChatArea) -> None:
+    def __init__(
+        self, main_window: QWidget, on_click: Callable[[], None], chat_area: ChatArea
+    ) -> None:
         super().__init__("", main_window)
         self.chat_area = chat_area
         self.setFixedSize(36, 32)

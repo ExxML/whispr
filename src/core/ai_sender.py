@@ -11,11 +11,13 @@ from google.genai.chats import Chat
 
 MODEL = "gemini-2.5-flash"
 CONFIG = types.GenerateContentConfig(
-    thinking_config=types.ThinkingConfig(thinking_budget=0)  # Disable thinking mode for faster responses
+    thinking_config=types.ThinkingConfig(
+        thinking_budget=0
+    )  # Disable thinking mode for faster responses
 )
 
 
-class AISender():
+class AISender:
     """Handles sending user input to Gemini via a persistent chat session."""
 
     def __init__(self) -> None:
@@ -35,7 +37,7 @@ class AISender():
         self,
         user_input: str,
         attachments: list[str] | None = None,
-        on_chunk: Callable[[str], None] | None = None
+        on_chunk: Callable[[str], None] | None = None,
     ) -> str:
         """Send a message and stream the response from the Gemini model.
 

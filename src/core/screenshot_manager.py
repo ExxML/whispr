@@ -13,7 +13,9 @@ class ScreenshotManager(QObject):
     def __init__(self) -> None:
         super().__init__()
         base_dir = os.getcwd()
-        self.screenshots_dir = os.path.join(base_dir, "src", "data", "cache", "screenshots")
+        self.screenshots_dir = os.path.join(
+            base_dir, "src", "data", "cache", "screenshots"
+        )
         os.makedirs(self.screenshots_dir, exist_ok=True)  # Ensure the folder exists
         self.screenshot_count = 0
         self.pending_paths: list[str] = []
