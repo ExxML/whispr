@@ -7,7 +7,7 @@
     body {
       font-family: sans-serif;
       text-align: center;
-      padding: 100px;
+      padding: 20px;
       background: #111;
       color: #eee;
       transition: background 0.3s ease, color 0.3s ease;
@@ -18,9 +18,22 @@
   <h1>Focus & Visibility Test</h1>
   <p id="status">🟢 Window and tab are active</p>
 
+  <br>
+
+  <div style="margin: 20px 0;">
+    <h2>Text Testing Area</h2>
+    <div
+      id="text-testing-area"
+      contenteditable="true"
+      style="background: #222; padding: 10px; text-align: left; min-height: 40px; font-family: monospace; font-size: 14px; outline: 1px solid #444; white-space: pre-wrap; word-break: break-word;"
+    ></div>
+  </div>
+
+  <br>
+
   <div style="margin: 20px 0;">
     <h2>Input Events Log</h2>
-    <div id="events" style="background: #222; padding: 10px; text-align: left; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
+    <div id="events" style="background: #222; padding: 10px; text-align: left; max-height: 350px; overflow-y: auto; font-family: monospace; font-size: 12px;"></div>
   </div>
 
   <script>
