@@ -10,6 +10,9 @@ from core.screenshot_manager import ScreenshotManager
 from core.win32_hook import (
     HOOKPROC,
     KBDLLHOOKSTRUCT,
+    KEYEVENTF_EXTENDEDKEY,
+    LLKHF_EXTENDED,
+    LLKHF_INJECTED,
     MOD_ALT,
     MOD_CTRL,
     MOD_SHIFT,
@@ -17,6 +20,7 @@ from core.win32_hook import (
     VK_DOWN,
     VK_LEFT,
     VK_RIGHT,
+    VK_TO_MOD_BIT,
     VK_UP,
     WH_KEYBOARD_LL,
     WM_KEYDOWN,
@@ -24,7 +28,6 @@ from core.win32_hook import (
     WM_QUIT,
     WM_SYSKEYDOWN,
     WM_SYSKEYUP,
-    get_active_modifiers,
     kernel32,
     user32,
 )
@@ -34,9 +37,22 @@ from ui.main_window import MainWindow
 class ShortcutManager(QObject):
     """Manages global keyboard shortcuts via a Win32 low-level keyboard hook.
 
-    All registered hotkeys are suppressed so other applications never see the
-    key events. Conditional hotkeys (everything except the visibility toggle)
-    are only active while the main window is visible.
+    Key suppression strategy
+    ------------------------
+    Modifier keys (Ctrl, Alt, Shift) are intercepted and suppressed the moment
+    they are pressed down, before any other application sees them. Their state
+    is tracked internally. When the user then presses a non-modifier key, the
+    hook checks whether the complete combination (held modifiers + that key)
+    matches a registered whispr hotkey:
+
+    - Match: the hotkey fires and the entire combination (modifiers + key) is
+      fully suppressed — no other application ever sees any part of it.
+    - No match: the suppressed modifier key-downs are replayed via keybd_event
+      so the target application receives the complete, intact key combination
+      as if whispr had never intercepted it.
+
+    Conditional hotkeys (everything except the visibility toggle) are only
+    active while the main window is visible.
     """
 
     # Qt signals for thread-safe communication with the main thread
@@ -85,8 +101,18 @@ class ShortcutManager(QObject):
         self.main_window_hotkeys: dict[
             tuple[int, int], tuple[Callable[[], None], bool]
         ] = {}
-        self.suppressed_vk_codes: set[int] = set()
-        self.held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
+        self.suppressed_vk_codes: set[int] = (
+            set()
+        )  # Non-modifier keys currently suppressed by a matched hotkey
+        self.held_vk_codes: set[int] = (
+            set()
+        )  # Non-modifier keys currently physically held down
+        self.held_modifier_vks: set[int] = (
+            set()
+        )  # Modifier keys currently held (tracked internally, never forwarded to the OS)
+        self.suppressed_mod_events: dict[
+            int, tuple[int, int]
+        ] = {}  # Modifier key-downs intercepted but not yet delivered: VK -> (scanCode, flags)
         self._set_hotkeys()
 
         # Low-level keyboard hook (prevent GC of the callback reference)
@@ -133,8 +159,22 @@ class ShortcutManager(QObject):
     def _low_level_keyboard_proc(self, nCode: int, wParam: int, lParam: int) -> int:
         """Win32 low-level keyboard hook callback.
 
-        Checks every key event against the registered hotkey tables.
-        Matching events are suppressed (not forwarded to other applications).
+        Implements the modifier suppression strategy described in the class
+        docstring. The decision tree for each incoming key event is:
+
+        1. Injected event (from our own keybd_event replay) — pass straight
+           through to avoid re-processing.
+        2. Modifier key-down — suppress and record internally; do not forward.
+        3. Modifier key-up — if the corresponding key-down was suppressed,
+           suppress the key-up too (the key was never delivered, so neither
+           should its release be).
+        4. Non-modifier key-down with a matching hotkey — fire the callback and
+           suppress the key; the entire combination stays hidden from the OS.
+        5. Non-modifier key-down with no matching hotkey — replay all previously
+           suppressed modifier key-downs followed by this key via keybd_event,
+           delivering the intact combination to other applications.
+        6. Non-modifier key-up for a suppressed key — suppress the release to
+           match its suppressed key-down.
 
         Args:
             nCode (int): Hook code indicating how to process the message.
@@ -150,9 +190,34 @@ class ShortcutManager(QObject):
             is_key_down = wParam in (WM_KEYDOWN, WM_SYSKEYDOWN)
             is_key_up = wParam in (WM_KEYUP, WM_SYSKEYUP)
 
-            # Only match on non-modifier keys; modifiers are always passed through
-            if vk_code not in MODIFIER_VK_CODES:
-                modifiers = get_active_modifiers()
+            # Step 1: Pass through events we injected ourselves via keybd_event (see step 5 below)
+            if kb.flags & LLKHF_INJECTED:
+                return int(
+                    user32.CallNextHookEx(self.hook_handle, nCode, wParam, lParam)
+                )
+
+            if vk_code in MODIFIER_VK_CODES:
+                # Steps 2 & 3: Intercept all modifier keys so that no partial combination
+                # (e.g. a bare Ctrl press) leaks through to other applications. The decision
+                # of whether to ultimately suppress or replay is deferred until we see the
+                # accompanying non-modifier key.
+                if is_key_down:
+                    self.held_modifier_vks.add(vk_code)
+                    self.suppressed_mod_events[vk_code] = (
+                        int(kb.scanCode),
+                        int(kb.flags),
+                    )
+                    return 1  # Step 2: Suppress modifier key-down
+
+                if is_key_up:
+                    self.held_modifier_vks.discard(vk_code)
+                    if vk_code in self.suppressed_mod_events:
+                        del self.suppressed_mod_events[vk_code]
+                        return 1  # Step 3: Suppress key-up to match the suppressed key-down
+            else:
+                # Non-modifier key: now we have the full picture — check the combination
+                # against the hotkey tables using the internally tracked modifier state.
+                modifiers = self._compute_modifier_mask()
                 hotkey_key = (modifiers, vk_code)
 
                 # Look up in always-active table first, then main window table
@@ -161,6 +226,8 @@ class ShortcutManager(QObject):
                     entry = self.main_window_hotkeys.get(hotkey_key)
 
                 if entry is not None:
+                    # Step 4: Whispr hotkey matched — fire the callback and suppress the
+                    # entire combination; the suppressed modifier key-downs are never replayed.
                     callback, repeat_callbacks = entry
                     if is_key_down:
                         # For no-repeat hotkeys, skip if the key is already physically held
@@ -177,14 +244,66 @@ class ShortcutManager(QObject):
                             self.suppressed_vk_codes.discard(vk_code)
                             return 1  # Suppress the matching key-up
 
+                elif is_key_down and self.suppressed_mod_events:
+                    # Step 5: No hotkey match — replay the suppressed modifier key-downs
+                    # followed by this key so other applications receive the intact combination.
+                    self._replay_modifiers_and_key(
+                        int(vk_code), int(kb.scanCode), int(kb.flags)
+                    )
+                    return 1  # Suppress the original event; the injected replay delivers it
+
                 elif is_key_up:
-                    # Key was held but hotkey no longer matches (e.g. modifier released early) - clean up
+                    # Step 6: Suppress key-up for any key whose key-down was already suppressed
+                    # (handles the edge case where a modifier was released before key-up)
                     self.held_vk_codes.discard(vk_code)
                     if vk_code in self.suppressed_vk_codes:
                         self.suppressed_vk_codes.discard(vk_code)
-                        return 1  # Suppress key-up even though modifiers changed
+                        return 1  # Suppress key-up to match its suppressed key-down
 
         return int(user32.CallNextHookEx(self.hook_handle, nCode, wParam, lParam))
+
+    def _compute_modifier_mask(self) -> int:
+        """Return a bitmask of currently held modifier keys based on internal tracking.
+
+        Uses the internally maintained set of held modifier VK codes rather than
+        querying the OS directly, because all modifier events are suppressed before
+        the OS can update its own key-state registers.
+
+        Returns:
+            int: Bitmask of active modifier keys (MOD_CTRL, MOD_ALT, MOD_SHIFT).
+        """
+        mask = 0
+        for vk in self.held_modifier_vks:
+            mask |= VK_TO_MOD_BIT.get(vk, 0)
+        return mask
+
+    def _replay_modifiers_and_key(
+        self, vk_code: int, scan_code: int, flags: int
+    ) -> None:
+        """Replay a non-whispr key combination to other applications.
+
+        Injects the previously suppressed modifier key-downs followed by the
+        non-modifier key into the input stream via keybd_event, reconstructing
+        the full key combination as if whispr had never intercepted it. The
+        suppressed modifier records are cleared after injection so that their
+        real key-up events (which continue to arrive from the hook) are no
+        longer suppressed and pass through normally.
+
+        The injected events carry the LLKHF_INJECTED flag, which the hook uses
+        to identify and pass them through without re-processing (step 1).
+
+        Args:
+            vk_code (int): Virtual key code of the non-modifier key to replay.
+            scan_code (int): Hardware scan code of the non-modifier key.
+            flags (int): Hook flags from KBDLLHOOKSTRUCT (used to detect extended keys).
+        """
+        for mod_vk, (mod_scan, mod_flags) in self.suppressed_mod_events.items():
+            kb_flags = KEYEVENTF_EXTENDEDKEY if (mod_flags & LLKHF_EXTENDED) else 0
+            user32.keybd_event(mod_vk, mod_scan, kb_flags, None)
+        self.suppressed_mod_events.clear()
+
+        kb_flags = KEYEVENTF_EXTENDEDKEY if (flags & LLKHF_EXTENDED) else 0
+        user32.keybd_event(vk_code, scan_code, kb_flags, None)
 
     def _hook_thread_entry(self) -> None:
         """Entry point for the keyboard hook thread.

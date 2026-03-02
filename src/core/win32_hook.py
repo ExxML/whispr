@@ -38,6 +38,26 @@ MODIFIER_VK_CODES = frozenset(
     }
 )
 
+# Mapping from modifier VK codes to bitmask values
+VK_TO_MOD_BIT: dict[int, int] = {
+    VK_SHIFT: MOD_SHIFT,
+    VK_CONTROL: MOD_CTRL,
+    VK_MENU: MOD_ALT,
+    0xA0: MOD_SHIFT,  # VK_LSHIFT
+    0xA1: MOD_SHIFT,  # VK_RSHIFT
+    0xA2: MOD_CTRL,  # VK_LCONTROL
+    0xA3: MOD_CTRL,  # VK_RCONTROL
+    0xA4: MOD_ALT,  # VK_LMENU
+    0xA5: MOD_ALT,  # VK_RMENU
+}
+
+# Low-level keyboard hook flag constants
+LLKHF_EXTENDED = 0x01
+LLKHF_INJECTED = 0x10
+
+# keybd_event flag constants
+KEYEVENTF_EXTENDEDKEY = 0x01
+
 
 # Win32 structure for low-level keyboard hook data
 class KBDLLHOOKSTRUCT(ctypes.Structure):
@@ -96,6 +116,13 @@ user32.GetAsyncKeyState.argtypes = [ctypes.c_int]
 user32.GetAsyncKeyState.restype = ctypes.c_short
 kernel32.GetModuleHandleW.argtypes = [ctypes.wintypes.LPCWSTR]
 kernel32.GetModuleHandleW.restype = ctypes.wintypes.HMODULE
+user32.keybd_event.argtypes = [
+    ctypes.c_ubyte,
+    ctypes.c_ubyte,
+    ctypes.wintypes.DWORD,
+    ctypes.c_void_p,
+]
+user32.keybd_event.restype = None
 
 
 def get_active_modifiers() -> int:
