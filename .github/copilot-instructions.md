@@ -34,6 +34,18 @@ src/assets/ — Icons and images
 - Modifier constants (`MOD_CTRL`, `MOD_ALT`, `MOD_SHIFT`) and Win32 types are defined in `core/win32_hook.py`.
 - All matched key events are **suppressed** (return 1 from hook proc). The hook also tracks held keys to prevent repeat-firing for non-repeatable hotkeys.
 
+## Static Analysis
+
+All code must pass the following checks before merging:
+
+```
+ruff check src          # Linter
+ruff format --check src # Formatter
+mypy --strict src       # Type checker (strict mode)
+```
+
+The CI workflow (`.github/workflows/static-analysis.yml`) runs these automatically on every push and pull request. Write code that satisfies all three from the start.
+
 ## Coding Style Conventions
 
 ### Import Statements
@@ -103,7 +115,21 @@ class ShortcutManager(QObject):
 ```
 
 ### Type Hints
-Always add type hints, return types, and function annotations to all functions and methods. Use `-> None` for functions that do not return a value. If the type of a parameter or return value is unclear, use `Any` from the `typing` module. If there are multiple possible types, use `|` to indicate a union (e.g. `str | None`). For callbacks, use `Callable` from `typing` with the appropriate signature (e.g. `Callable[[str], None]` for a function that takes a string and returns nothing).
+Always add type hints, return types, and function annotations to all functions and methods. Use `-> None` for functions that do not return a value. If the type of a parameter or return value is unclear, use `Any` from the `typing` module. If there are multiple possible types, use `|` to indicate a union (e.g. `str | None`). For callbacks, use `Callable` from `typing` (never the built-in `callable`) with the appropriate signature (e.g. `Callable[[str], None]` for a function that takes a string and returns nothing).
+
+**Strict mypy requirements (`mypy --strict`):**
+- Generic types must always include type parameters: use `re.Match[str]`, not `re.Match`; use `list[str]`, not `list`; etc.
+- Never use `callable` as a type — always import and use `Callable` from `typing`.
+- PyQt6 event override methods must accept `| None` on the event parameter to match the supertype signature, e.g.:
+  ```python
+  def mousePressEvent(self, event: QMouseEvent | None) -> None:
+  def paintEvent(self, _event: QPaintEvent | None) -> None:
+  def resizeEvent(self, event: QResizeEvent | None) -> None:
+  def enterEvent(self, event: QEnterEvent | None) -> None:
+  def leaveEvent(self, event: QEvent | None) -> None:
+  ```
+- When calling Qt methods that return `X | None` (e.g. `QApplication.primaryScreen()`, `verticalScrollBar()`), either assert the result is not `None` or store it typed as `X` before use. When possible, directly instantiate objects in __init__ instead of setting the variable as `None` in __init__. This ensures the variable is always properly typed and eliminates the need for `None` checks.
+- Functions that return a value from a C-extension call (e.g. ctypes/win32) must explicitly cast the result to the declared return type (e.g. `return int(...)`) to avoid returning `Any`.
 
 Example:
 ```python
