@@ -14,6 +14,7 @@ class ChatBubble(QWidget):
         super().__init__()
         self.message = message
         self.is_user = is_user
+        self._loading_timer: QTimer | None = None
         self._init_UI()
 
     def set_bot_message(self, message: str) -> None:

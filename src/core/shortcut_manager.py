@@ -2,6 +2,7 @@ import ctypes
 import ctypes.wintypes
 import math
 import threading
+from typing import Callable
 
 from PyQt6.QtCore import QObject, QPoint, QTimer, pyqtSignal
 from PyQt6.QtWidgets import QApplication
@@ -73,14 +74,14 @@ class ShortcutManager(QObject):
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self._animate_step)
         self.animation_active = False
-        self.animation_start_pos = None
-        self.animation_target_pos = None
+        self.animation_start_pos: QPoint | None = None
+        self.animation_target_pos: QPoint | None = None
         self.animation_progress = 0.0
         self._setup_movement_distances()
 
         # Hotkey lookup tables: (modifier_bitmask, vk_code) -> (callback, repeat_callbacks)
-        self.always_active_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
-        self.main_window_hotkeys: dict[tuple[int, int], tuple[callable, bool]] = {}
+        self.always_active_hotkeys: dict[tuple[int, int], tuple[Callable[[], None], bool]] = {}
+        self.main_window_hotkeys: dict[tuple[int, int], tuple[Callable[[], None], bool]] = {}
         self.suppressed_vk_codes: set[int] = set()
         self.held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
         self._set_hotkeys()
@@ -180,7 +181,7 @@ class ShortcutManager(QObject):
                         self.suppressed_vk_codes.discard(vk_code)
                         return 1  # Suppress key-up even though modifiers changed
 
-        return user32.CallNextHookEx(self.hook_handle, nCode, wParam, lParam)
+        return int(user32.CallNextHookEx(self.hook_handle, nCode, wParam, lParam))
 
     def _hook_thread_entry(self) -> None:
         """Entry point for the keyboard hook thread.
@@ -222,7 +223,8 @@ class ShortcutManager(QObject):
 
     def _setup_movement_distances(self) -> None:
         """Determine screen geometry and movement distances"""
-        self.screen_rect = QApplication.primaryScreen().availableGeometry()
+        assert self.main_window.primary_screen is not None
+        self.screen_rect = self.main_window.primary_screen.availableGeometry()
         self.max_move_distance_x = self.screen_rect.width() // 14
         self.max_move_distance_y = self.screen_rect.height() // 14
         self.screen_bounds_offset = (
@@ -247,6 +249,8 @@ class ShortcutManager(QObject):
 
     def _animate_step(self) -> None:
         """Advance one frame of the movement animation"""
+        assert self.animation_start_pos is not None
+        assert self.animation_target_pos is not None
         self.animation_progress += self.animation_frame_time / self.animation_duration
 
         if self.animation_progress >= 1.0:

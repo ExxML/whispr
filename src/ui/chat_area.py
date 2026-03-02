@@ -5,7 +5,7 @@ from PyQt6.QtCore import (
     Qt,
     QTimer,
 )
-from PyQt6.QtGui import QColor, QLinearGradient, QPainter
+from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPaintEvent, QResizeEvent
 from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 from ui.chat_bubble import ChatBubble
@@ -19,14 +19,18 @@ class ChatArea(QScrollArea):
     def __init__(self, main_window: QWidget, bg_color: QColor) -> None:
         super().__init__(main_window)
         self.bg_color = bg_color
+        self.streaming_bubble: ChatBubble | None = None
+        self.streaming_text: str = ""
         self._init_UI()
         self._init_scroll_animation()
         self._reset_stream()
 
-    def resizeEvent(self, _event) -> None:
+    def resizeEvent(self, _event: QResizeEvent | None) -> None:
         """Position the fade overlays at the top and bottom of the viewport."""
         super().resizeEvent(_event)
-        vp = self.viewport().geometry()
+        viewport = self.viewport()
+        assert viewport is not None
+        vp = viewport.geometry()
         # Inset by 2px on each side to avoid the 1px window border
         x = vp.x() + 2
         w = max(0, vp.width() - 4)
@@ -63,8 +67,9 @@ class ChatArea(QScrollArea):
 
         # Force scroll to bottom after a delay
         if is_user:
+            sb = self.scrollbar
             QTimer.singleShot(
-                400, lambda: self._animate_to(self.verticalScrollBar().maximum(), 100)
+                400, lambda: self._animate_to(sb.maximum(), 100)
             )
 
     def start_assistant_stream(self) -> None:
@@ -118,8 +123,10 @@ class ChatArea(QScrollArea):
         # Remove all widgets except the stretch
         while self.chat_layout.count() > 1:
             item = self.chat_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
 
     def shortcut_scroll(self, amount: int) -> None:
         """Scroll the chat area by a specified amount.
@@ -127,8 +134,7 @@ class ChatArea(QScrollArea):
         Args:
             amount (int): The pixel amount to scroll (positive for down, negative for up).
         """
-        scrollbar = self.verticalScrollBar()
-        target = scrollbar.value() + amount
+        target = self.scrollbar.value() + amount
         duration = 100
         self._animate_to(target, duration)
 
@@ -156,9 +162,11 @@ class ChatArea(QScrollArea):
         self._bottom_fade.hide()
 
         # Update fade visibility on scroll
-        sb = self.verticalScrollBar()
-        sb.valueChanged.connect(self._update_fades)
-        sb.rangeChanged.connect(self._update_fades)
+        scrollbar = self.verticalScrollBar()
+        assert scrollbar is not None
+        self.scrollbar = scrollbar
+        self.scrollbar.valueChanged.connect(self._update_fades)
+        self.scrollbar.rangeChanged.connect(self._update_fades)
 
         # Style the scroll area
         self.setStyleSheet("""
@@ -194,13 +202,13 @@ class ChatArea(QScrollArea):
     def _init_scroll_animation(self) -> None:
         """Initialize smooth scrolling animation."""
         self.scroll_animation = QPropertyAnimation(
-            self.verticalScrollBar(), b"value", self
+            self.scrollbar, b"value", self
         )
         self.scroll_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
 
     def _update_fades(self) -> None:
         """Show or hide fade overlays based on scroll position."""
-        sb = self.verticalScrollBar()
+        sb = self.scrollbar
         self._top_fade.setVisible(sb.value() > sb.minimum())
         self._bottom_fade.setVisible(sb.value() < sb.maximum())
 
@@ -214,7 +222,7 @@ class ChatArea(QScrollArea):
         anim = self.scroll_animation
         if anim.state() == QAbstractAnimation.State.Running:
             anim.stop()
-        sb = self.verticalScrollBar()
+        sb = self.scrollbar
         target = max(sb.minimum(), min(target, sb.maximum()))
         anim.setTargetObject(sb)
         anim.setStartValue(sb.value())
@@ -237,7 +245,7 @@ class _FadeOverlay(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-    def paintEvent(self, _event) -> None:
+    def paintEvent(self, _event: QPaintEvent | None) -> None:
         """Paint a gradient from transparent to the window background color."""
         p = QPainter(self)
         h = self.height()

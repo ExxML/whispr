@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QRectF, Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPen, QPixmap
+from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPaintEvent, QPen, QPixmap
 from PyQt6.QtWidgets import QHBoxLayout, QPushButton, QWidget
 
 from core.screenshot_manager import ScreenshotManager
@@ -52,7 +52,7 @@ class ScreenshotThumbnail(QWidget):
             }
         """)
 
-    def paintEvent(self, _event) -> None:
+    def paintEvent(self, _event: QPaintEvent | None) -> None:
         """Draw the thumbnail image clipped to rounded corners with a subtle border."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -93,12 +93,12 @@ class ScreenshotTray(QWidget):
         # Transparent background so the chat text behind the tray remains readable
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(
+        self.tray_layout = QHBoxLayout(self)
+        self.tray_layout.setContentsMargins(
             12, 0, 12, 0
         )  # Extra right margin to avoid the scroll bar
-        layout.setSpacing(6)
-        layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.tray_layout.setSpacing(6)
+        self.tray_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
         # Height includes the overhang area so thumbnails are not clipped
         self.setFixedHeight(PREVIEW_HEIGHT + BTN_OVERHANG + 6)
@@ -108,9 +108,8 @@ class ScreenshotTray(QWidget):
 
     def clear(self) -> None:
         """Remove all thumbnails and hide the tray."""
-        layout = self.layout()
-        while layout.count():
-            item = layout.takeAt(0)
+        while self.tray_layout.count():
+            item = self.tray_layout.takeAt(0)
             widget = item.widget() if item else None
             if widget:
                 widget.deleteLater()
@@ -125,7 +124,7 @@ class ScreenshotTray(QWidget):
         """
         thumb = ScreenshotThumbnail(path, self)
         thumb.removed.connect(self._on_thumbnail_removed)
-        self.layout().addWidget(thumb)
+        self.tray_layout.addWidget(thumb)
         self.setVisible(True)
         self.visibility_changed.emit()
 
@@ -137,15 +136,14 @@ class ScreenshotTray(QWidget):
         """
         self.screenshot_manager.remove_pending(path)
 
-        layout = self.layout()
-        for i in range(layout.count()):
-            item = layout.itemAt(i)
+        for i in range(self.tray_layout.count()):
+            item = self.tray_layout.itemAt(i)
             widget = item.widget() if item else None
             if isinstance(widget, ScreenshotThumbnail) and widget.path == path:
-                layout.removeWidget(widget)
+                self.tray_layout.removeWidget(widget)
                 widget.deleteLater()
                 break
 
-        if layout.count() == 0:
+        if self.tray_layout.count() == 0:
             self.setVisible(False)
             self.visibility_changed.emit()

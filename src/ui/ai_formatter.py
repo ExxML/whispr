@@ -52,7 +52,7 @@ def format_message(message: str) -> str:
     return f"<div style='line-height: 1.4; white-space: pre-wrap;'>{formatted}</div>"
 
 
-def _format_inline_code(match: re.Match) -> str:
+def _format_inline_code(match: re.Match[str]) -> str:
     """Format an inline code match with monospace styling.
 
     Args:
@@ -70,7 +70,7 @@ def _format_inline_code(match: re.Match) -> str:
     )
 
 
-def _format_code_block(match: re.Match) -> str:
+def _format_code_block(match: re.Match[str]) -> str:
     """Format a fenced code block with syntax highlighting and styling.
 
     Args:

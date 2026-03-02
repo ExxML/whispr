@@ -2,7 +2,7 @@ import ctypes
 from ctypes import wintypes
 
 from PyQt6.QtCore import QPoint, Qt, QTimer
-from PyQt6.QtGui import QColor, QMouseEvent, QPainter, QPen
+from PyQt6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen, QResizeEvent
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
 from ui.chat_area import ChatArea
@@ -59,13 +59,13 @@ class MainWindow(QWidget):
         if app is not None:
             app.quit()
 
-    def resizeEvent(self, event) -> None:
+    def resizeEvent(self, event: QResizeEvent | None) -> None:
         """Reposition the floating screenshot tray when the window is resized."""
         super().resizeEvent(event)
         self._position_screenshot_tray()
 
     # Override mousePressEvent to automatically set focus to input field
-    def mousePressEvent(self, event: QMouseEvent) -> None:
+    def mousePressEvent(self, event: QMouseEvent | None) -> None:
         """Handle mouse press events by setting focus to the input field.
 
         Args:
@@ -75,7 +75,7 @@ class MainWindow(QWidget):
         super().mousePressEvent(event)
 
     # Override paintEvent to draw app window
-    def paintEvent(self, _event) -> None:
+    def paintEvent(self, _event: QPaintEvent | None) -> None:
         """Paint the main window with rounded corners and a border."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -118,7 +118,9 @@ class MainWindow(QWidget):
         self.unsetCursor()
 
         # Window setup (position main window at center-top on screen)
-        screen_rect = QApplication.primaryScreen().availableGeometry()
+        self.primary_screen = QApplication.primaryScreen()
+        assert self.primary_screen is not None
+        screen_rect = self.primary_screen.availableGeometry()
         self.setGeometry(
             (screen_rect.width() - self.window_width) // 2,
             2,
@@ -142,14 +144,7 @@ class MainWindow(QWidget):
 
         # Create and add title bar buttons
         self.clear_chat_button = ClearChatButton(
-            self,
-            lambda: (
-                self.chat_area.clear_chat(),
-                self.ai_sender.reset_chat(),
-                self.screenshot_manager.clear_screenshots(),
-                self.screenshot_tray.clear(),
-            ),
-            self.chat_area,
+            self, self._clear_all, self.chat_area
         )
         header_layout = QHBoxLayout()
         header_layout.addWidget(self.clear_chat_button)
@@ -231,6 +226,13 @@ class MainWindow(QWidget):
         self.visibility_timer.timeout.connect(self._ensure_window_visible)
         self.visibility_timer.start()
 
+    def _clear_all(self) -> None:
+        """Clear all chat data, screenshots, and screenshot tray thumbnails."""
+        self.chat_area.clear_chat()
+        self.ai_sender.reset_chat()
+        self.screenshot_manager.clear_screenshots()
+        self.screenshot_tray.clear()
+
     def _position_screenshot_tray(self) -> None:
         """Place the screenshot tray above the input bar, floating over the chat area."""
         tray = self.screenshot_tray
@@ -270,9 +272,9 @@ class MainWindow(QWidget):
             bool: True if the main window is topmost at all sampled points.
         """
         try:
-            screen = QApplication.primaryScreen()
             rect = self.frameGeometry()
-            scale = screen.devicePixelRatio()
+            assert self.primary_screen is not None
+            scale = self.primary_screen.devicePixelRatio()
             ga_root = 2
             self_hwnd = int(self.winId())
             self_root = ctypes.windll.user32.GetAncestor(

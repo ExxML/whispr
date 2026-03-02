@@ -19,9 +19,9 @@ class AIReceiver(QObject):
         super().__init__()
         self.ai_sender = ai_sender
         self.chat_area = chat_area
-        self.ai_thread = None
+        self.ai_thread: threading.Thread | None = None
         self.stop_flag = threading.Event()  # Stop flag in case a new user message is sent while a bot message is being streamed
-        self.message = None
+        self.message: str | None = None
         self.attachments: list[str] | None = None
 
         # Connect signals to response handlers once
@@ -72,6 +72,7 @@ class AIReceiver(QObject):
 
     def _run(self) -> None:
         """Execute AI content generation and emit progress and completion signals."""
+        assert self.message is not None
         try:
             response = self.ai_sender.send_message(
                 self.message, self.attachments, self._on_chunk
