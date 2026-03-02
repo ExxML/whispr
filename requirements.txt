@@ -1,6 +1,5 @@
 mss==10.1.0
 pyqt6==6.9.1
-nuitka==2.8.4
 pywin32==311
 google-genai==1.46.0
 python-dotenv==1.2.1
