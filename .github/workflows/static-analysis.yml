@@ -1,0 +1,47 @@
+name: Python Static Analysis
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  analyze:
+    name: Lint, Type Check, and Architecture Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies and tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff mypy pylint
+
+      - name: Run Ruff Linter
+        run: |
+          ruff check src
+
+      - name: Run Ruff Formatter Check
+        run: |
+          ruff format --check src
+
+      - name: Run Mypy Type Checker
+        run: |
+          mypy --strict src
+
+      - name: Check for Circular Imports
+        run: |
+          pylint --disable=all --enable=cyclic-import src
