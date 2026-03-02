@@ -9,7 +9,7 @@ from google.genai import types
 from google.genai.chats import Chat
 
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3-flash-preview"
 CONFIG = types.GenerateContentConfig(
     thinking_config=types.ThinkingConfig(
         thinking_budget=0
