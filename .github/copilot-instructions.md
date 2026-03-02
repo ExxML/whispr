@@ -70,8 +70,8 @@ from core.win32_hook import (
 Use **absolute imports** (ex. `from core.ai_receiver import AIReceiver`) for all imports, regardless of whether it is in the same module or cross-module.
 Never use wildcard/star imports.
 
-### Class and Function/Method Definitions Grouping
-All public classes/functions/methods must be defined before private ones. Additionally, keep related functions/methods together, e.g., all GUI setup functions together.
+### Class/Function/Method Ordering
+All public classes/functions/methods *must* be defined before private classes/functions/methods. Additionally, keep related functions/methods together, e.g., all GUI setup functions together.
 
 ### Docstrings
 Every function (except __init__), method, and class must have a Google-style docstring using triple double quotes (`"""`). All docstrings should be in imperative mood and every sentence should end with a period.
