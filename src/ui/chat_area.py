@@ -5,41 +5,21 @@ from PyQt6.QtCore import (
     Qt,
     QTimer,
 )
-from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPaintEvent, QResizeEvent
 from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 from ui.chat_bubble import ChatBubble
-
-FADE_HEIGHT = 20
 
 
 class ChatArea(QScrollArea):
     """Scrollable chat area for displaying message history."""
 
-    def __init__(self, main_window: QWidget, bg_color: QColor) -> None:
+    def __init__(self, main_window: QWidget) -> None:
         super().__init__(main_window)
-        self.bg_color = bg_color
         self.streaming_bubble: ChatBubble | None = None
         self.streaming_text: str = ""
         self._init_UI()
         self._init_scroll_animation()
         self._reset_stream()
-
-    def resizeEvent(self, _event: QResizeEvent | None) -> None:
-        """Position the fade overlays at the top and bottom of the viewport."""
-        super().resizeEvent(_event)
-        viewport = self.viewport()
-        assert viewport is not None
-        vp = viewport.geometry()
-        # Inset by 2px on each side to avoid the 1px window border
-        x = vp.x() + 2
-        w = max(0, vp.width() - 4)
-        self._top_fade.setGeometry(x, vp.y(), w, FADE_HEIGHT)
-        self._bottom_fade.setGeometry(
-            x, vp.y() + vp.height() - FADE_HEIGHT, w, FADE_HEIGHT
-        )
-        self._top_fade.raise_()
-        self._bottom_fade.raise_()
 
     def add_message(self, message: str, is_user: bool) -> None:
         """Add a new message to the chat area.
@@ -153,18 +133,9 @@ class ChatArea(QScrollArea):
         # Set the container as the scroll area's widget
         self.setWidget(self.chat_container)
 
-        # Create fade overlays (positioned in resizeEvent)
-        self._top_fade = _FadeOverlay(self, is_top=True)
-        self._bottom_fade = _FadeOverlay(self, is_top=False)
-        self._top_fade.hide()
-        self._bottom_fade.hide()
-
-        # Update fade visibility on scroll
         scrollbar = self.verticalScrollBar()
         assert scrollbar is not None
         self.scrollbar = scrollbar
-        self.scrollbar.valueChanged.connect(self._update_fades)
-        self.scrollbar.rangeChanged.connect(self._update_fades)
 
         # Style the scroll area
         self.setStyleSheet("""
@@ -202,12 +173,6 @@ class ChatArea(QScrollArea):
         self.scroll_animation = QPropertyAnimation(self.scrollbar, b"value", self)
         self.scroll_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
 
-    def _update_fades(self) -> None:
-        """Show or hide fade overlays based on scroll position."""
-        sb = self.scrollbar
-        self._top_fade.setVisible(sb.value() > sb.minimum())
-        self._bottom_fade.setVisible(sb.value() < sb.maximum())
-
     def _animate_to(self, target: int, duration: int) -> None:
         """Animate scrollbar to target position.
 
@@ -225,33 +190,3 @@ class ChatArea(QScrollArea):
         anim.setEndValue(target)
         anim.setDuration(duration)
         anim.start()
-
-
-class _FadeOverlay(QWidget):
-    """Overlay widget that fades content into the window background color.
-
-    Paints a vertical gradient from transparent to the window background color
-    so that text near the edges blends smoothly into the background.
-    """
-
-    def __init__(self, chat_area: ChatArea, is_top: bool) -> None:
-        super().__init__(chat_area)
-        self.bg_color = chat_area.bg_color
-        self._is_top = is_top
-        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-    def paintEvent(self, _event: QPaintEvent | None) -> None:
-        """Paint a gradient from transparent to the window background color."""
-        p = QPainter(self)
-        h = self.height()
-        gradient = QLinearGradient(0, 0, 0, h)
-        transparent = QColor(self.bg_color)
-        transparent.setAlpha(0)
-        if self._is_top:
-            gradient.setColorAt(0.0, self.bg_color)
-            gradient.setColorAt(1.0, transparent)
-        else:
-            gradient.setColorAt(0.0, transparent)
-            gradient.setColorAt(1.0, self.bg_color)
-        p.fillRect(self.rect(), gradient)

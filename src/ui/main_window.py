@@ -134,7 +134,7 @@ class MainWindow(QWidget):
         main_layout.setSpacing(0)
 
         # Create chat area
-        self.chat_area = ChatArea(self, self.BG_COLOR)
+        self.chat_area = ChatArea(self)
 
         # Create input bar
         self.input_bar = InputBar(self)
