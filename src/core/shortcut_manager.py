@@ -5,7 +5,6 @@ import threading
 from typing import Callable
 
 from PyQt6.QtCore import QObject, QPoint, QTimer, pyqtSignal
-from PyQt6.QtWidgets import QApplication
 
 from core.screenshot_manager import ScreenshotManager
 from core.win32_hook import (
@@ -80,8 +79,12 @@ class ShortcutManager(QObject):
         self._setup_movement_distances()
 
         # Hotkey lookup tables: (modifier_bitmask, vk_code) -> (callback, repeat_callbacks)
-        self.always_active_hotkeys: dict[tuple[int, int], tuple[Callable[[], None], bool]] = {}
-        self.main_window_hotkeys: dict[tuple[int, int], tuple[Callable[[], None], bool]] = {}
+        self.always_active_hotkeys: dict[
+            tuple[int, int], tuple[Callable[[], None], bool]
+        ] = {}
+        self.main_window_hotkeys: dict[
+            tuple[int, int], tuple[Callable[[], None], bool]
+        ] = {}
         self.suppressed_vk_codes: set[int] = set()
         self.held_vk_codes: set[int] = set()  # Tracks physically held non-modifier keys
         self._set_hotkeys()

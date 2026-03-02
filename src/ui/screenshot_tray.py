@@ -98,7 +98,9 @@ class ScreenshotTray(QWidget):
             12, 0, 12, 0
         )  # Extra right margin to avoid the scroll bar
         self.tray_layout.setSpacing(6)
-        self.tray_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.tray_layout.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        )
 
         # Height includes the overhang area so thumbnails are not clipped
         self.setFixedHeight(PREVIEW_HEIGHT + BTN_OVERHANG + 6)

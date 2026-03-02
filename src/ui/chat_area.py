@@ -68,9 +68,7 @@ class ChatArea(QScrollArea):
         # Force scroll to bottom after a delay
         if is_user:
             sb = self.scrollbar
-            QTimer.singleShot(
-                400, lambda: self._animate_to(sb.maximum(), 100)
-            )
+            QTimer.singleShot(400, lambda: self._animate_to(sb.maximum(), 100))
 
     def start_assistant_stream(self) -> None:
         """Create an assistant bubble to stream content into (not saved until finalized)."""
@@ -201,9 +199,7 @@ class ChatArea(QScrollArea):
 
     def _init_scroll_animation(self) -> None:
         """Initialize smooth scrolling animation."""
-        self.scroll_animation = QPropertyAnimation(
-            self.scrollbar, b"value", self
-        )
+        self.scroll_animation = QPropertyAnimation(self.scrollbar, b"value", self)
         self.scroll_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
 
     def _update_fades(self) -> None:
