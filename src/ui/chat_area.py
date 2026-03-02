@@ -1,13 +1,20 @@
 from PyQt6.QtCore import (
     QAbstractAnimation,
     QEasingCurve,
+    QObject,
+    QPoint,
     QPropertyAnimation,
+    QRectF,
     Qt,
     QTimer,
 )
-from PyQt6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
+from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPixmap
+from PyQt6.QtWidgets import QGraphicsEffect, QScrollArea, QVBoxLayout, QWidget
 
 from ui.chat_bubble import ChatBubble
+
+
+FADE_HEIGHT = 20
 
 
 class ChatArea(QScrollArea):
@@ -163,6 +170,29 @@ class ChatArea(QScrollArea):
             }
         """)
 
+        # Apply fade effect to the top and bottom edges of the viewport
+        viewport = self.viewport()
+        assert viewport is not None
+        self.fade_effect = _FadeOverlay()
+        viewport.setGraphicsEffect(self.fade_effect)
+
+        # Connect scroll signals for position-aware fading.
+        # Defer via singleShot(0) so the scrollbar value is read after Qt has
+        # finished applying all pending layout/range adjustments.
+        self.scrollbar.valueChanged.connect(
+            lambda _val: QTimer.singleShot(0, self._update_fade_visibility)
+        )
+        self.scrollbar.rangeChanged.connect(
+            lambda _min, _max: QTimer.singleShot(0, self._update_fade_visibility)
+        )
+
+    def _update_fade_visibility(self) -> None:
+        """Show or hide each fade edge based on the current scroll position."""
+        sb = self.scrollbar
+        self.fade_effect.show_top = sb.value() > sb.minimum()
+        self.fade_effect.show_bottom = sb.value() < sb.maximum()
+        self.fade_effect.update()
+
     def _reset_stream(self) -> None:
         """Reset the streaming bubble and accumulated text to a blank state."""
         self.streaming_bubble = None
@@ -190,3 +220,60 @@ class ChatArea(QScrollArea):
         anim.setEndValue(target)
         anim.setDuration(duration)
         anim.start()
+
+
+class _FadeOverlay(QGraphicsEffect):
+    """Fades the top and bottom edges of a widget to transparent."""
+
+    def __init__(
+        self, fade_height: int = FADE_HEIGHT, parent: QObject | None = None
+    ) -> None:
+        super().__init__(parent)
+        self.fade_height = fade_height
+        self.show_top = False
+        self.show_bottom = False
+
+    def draw(self, painter: QPainter | None) -> None:
+        """Draw the source widget with faded top and bottom edges."""
+        if painter is None:
+            return
+
+        result: tuple[QPixmap, QPoint | None] = self.sourcePixmap(
+            Qt.CoordinateSystem.LogicalCoordinates
+        )
+        pixmap, offset = result
+
+        if pixmap.isNull() or offset is None:
+            return
+
+        # QPainter on a high-DPR pixmap operates in logical coordinates, so
+        # we must derive logical dimensions from the raw pixel size.
+        dpr = pixmap.devicePixelRatio()
+        height = pixmap.height() / dpr
+        width = pixmap.width() / dpr
+        fade_px = float(self.fade_height)
+
+        if height > 2 * fade_px:
+            fade_painter = QPainter(pixmap)
+            fade_painter.setCompositionMode(
+                QPainter.CompositionMode.CompositionMode_DestinationIn
+            )
+
+            if self.show_top:
+                top_gradient = QLinearGradient(0, 0, 0, fade_px)
+                top_gradient.setColorAt(0.0, QColor(0, 0, 0, 0))
+                top_gradient.setColorAt(1.0, QColor(0, 0, 0, 255))
+                fade_painter.fillRect(QRectF(0, 0, width, fade_px), top_gradient)
+
+            if self.show_bottom:
+                bottom_gradient = QLinearGradient(0, height - fade_px, 0, height)
+                bottom_gradient.setColorAt(0.0, QColor(0, 0, 0, 255))
+                bottom_gradient.setColorAt(1.0, QColor(0, 0, 0, 0))
+                fade_painter.fillRect(
+                    QRectF(0, height - fade_px, width, fade_px),
+                    bottom_gradient,
+                )
+
+            fade_painter.end()
+
+        painter.drawPixmap(offset, pixmap)
