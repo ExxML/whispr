@@ -201,7 +201,36 @@ class ChatArea(QScrollArea):
     def _init_scroll_animation(self) -> None:
         """Initialize smooth scrolling animation."""
         self.scroll_animation = QPropertyAnimation(self.scrollbar, b"value", self)
-        self.scroll_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
+        self.scroll_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.scroll_target: int = 0
+
+    def wheelEvent(self, event: QWheelEvent | None) -> None:
+        """Handle mouse wheel events with smooth animated scrolling.
+
+        Accumulates the running animation target so rapid wheel spins
+        chain naturally instead of restarting from the current position.
+        """
+        if event is None:
+            return
+        delta = event.angleDelta().y()
+        if delta == 0:
+            event.ignore()
+            return
+        # Scale factor: 120 units per standard notch → ~80 px per notch.
+        step = round(-delta * 2 / 3)
+        if step == 0:
+            event.accept()
+            return
+        anim = self.scroll_animation
+        base = (
+            self.scroll_target
+            if anim.state() == QAbstractAnimation.State.Running
+            else self.scrollbar.value()
+        )
+        sb = self.scrollbar
+        self.scroll_target = max(sb.minimum(), min(base + step, sb.maximum()))
+        self._animate_to(self.scroll_target, 150)
+        event.accept()
 
     def _animate_to(self, target: int, duration: int) -> None:
         """Animate scrollbar to target position.
