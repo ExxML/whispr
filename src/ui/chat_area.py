@@ -8,7 +8,7 @@ from PyQt6.QtCore import (
     Qt,
     QTimer,
 )
-from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPixmap
+from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPixmap, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsEffect, QScrollArea, QVBoxLayout, QWidget
 
 from ui.chat_bubble import ChatBubble
