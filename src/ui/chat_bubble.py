@@ -93,6 +93,9 @@ class ChatBubble(QWidget):
                     padding: 0px 0px 0px 1px;  /* top, right, bottom, left */
                 }
             """)
+            self.message_label.setAlignment(
+                Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft
+            )
             self.message_label.setWordWrap(True)
             self.message_label.setFixedWidth(515)
             layout.addWidget(self.message_label)
