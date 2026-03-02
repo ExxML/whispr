@@ -128,7 +128,7 @@ class ChatArea(QScrollArea):
         # Configure scroll area
         self.setWidgetResizable(True)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
 
         # Create container widget for messages
         self.chat_container = QWidget()
@@ -161,6 +161,9 @@ class ChatArea(QScrollArea):
             }
             QScrollBar::handle:vertical:hover {
                 background-color: rgba(255, 255, 255, 0.5);
+            }
+            QScrollBar::handle:vertical:disabled {
+                background-color: transparent;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
