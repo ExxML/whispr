@@ -44,7 +44,7 @@ class ChatBubble(QWidget):
     def _init_UI(self) -> None:
         """Initialize the chat bubble UI layout and styling."""
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 2, 10, 2)
+        layout.setContentsMargins(5, 2, 5, 2)
 
         # Create message label with HTML formatting
         # Default formatting for user message only (bot message uses formatting in set_bot_message)
