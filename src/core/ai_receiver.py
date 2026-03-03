@@ -11,16 +11,20 @@ class AIReceiver(QObject):
 
     # Signals for cross-thread communication
     # Using threading instead of QThread due to compilation issues with Nuitka
-    finished = pyqtSignal(str)
-    error = pyqtSignal(str)
-    progress = pyqtSignal(str)
+    # Each signal carries a stream_id so stale signals from superseded streams are ignored
+    finished = pyqtSignal(int)
+    error = pyqtSignal(str, int)
+    progress = pyqtSignal(str, int)
 
     def __init__(self, ai_sender: AISender, chat_area: ChatArea) -> None:
         super().__init__()
         self.ai_sender = ai_sender
         self.chat_area = chat_area
         self.ai_thread: threading.Thread | None = None
-        self.stop_flag = threading.Event()  # Stop flag in case a new user message is sent while a bot message is being streamed
+        self.stop_flag = threading.Event()  # Stop flag for the currently running stream
+        self.stream_id: int = (
+            0  # Incremented on each new stream; used to discard stale queued signals
+        )
         self.message: str | None = None
         self.attachments: list[str] | None = None
 
@@ -38,16 +42,20 @@ class AIReceiver(QObject):
             message (str): The user's message text.
             attachments (list[str], optional): List of file paths to attach to the request.
         """
-        # If there's an active thread, stop it
-        if self.ai_thread is not None and self.ai_thread.is_alive():
-            self.stop_flag.set()
+        # Stop the current stream and finalize any in-progress bubble
+        self.stop_flag.set()
+        if self.chat_area.streaming_bubble is not None:
+            self.chat_area.finalize_assistant_stream()
 
-            # Finalize the interrupted stream
-            if self.chat_area.streaming_bubble is not None:
-                self.chat_area.finalize_assistant_stream()
+        # Advance stream_id so any signals already queued from the old stream are ignored
+        self.stream_id += 1
+        current_id = self.stream_id
 
-        # Reset stop flag for new message
+        # Fresh stop flag for the new stream; capture locally so the thread always
+        # checks its own flag even if self.stop_flag is later replaced
         self.stop_flag = threading.Event()
+        local_flag = self.stop_flag
+
         self.message = message
         self.attachments = attachments
 
@@ -55,67 +63,84 @@ class AIReceiver(QObject):
         self.chat_area.add_message(message, is_user=True)
 
         # Start new thread
-        self.ai_thread = threading.Thread(target=self._run, daemon=True)
+        self.ai_thread = threading.Thread(
+            target=self._run, args=(current_id, local_flag), daemon=True
+        )
         self.ai_thread.start()
 
     def stop(self) -> None:
-        """Signal the thread to stop."""
+        """Signal the current stream to stop and invalidate any queued signals."""
         self.stop_flag.set()
+        self.stream_id += (
+            1  # Discard any progress/finished/error signals already queued
+        )
 
-    def _is_stopped(self) -> bool:
-        """Check if stop has been requested.
+    def _run(self, stream_id: int, stop_flag: threading.Event) -> None:
+        """Execute AI content generation and emit progress and completion signals.
 
-        Returns:
-            bool: True if the thread has been signaled to stop.
+        Args:
+            stream_id (int): The generation ID for this stream invocation.
+            stop_flag (threading.Event): The cancellation flag for this stream.
         """
-        return self.stop_flag.is_set()
-
-    def _run(self) -> None:
-        """Execute AI content generation and emit progress and completion signals."""
         assert self.message is not None
         try:
-            response = self.ai_sender.send_message(
-                self.message, self.attachments, self._on_chunk
+            self.ai_sender.send_message(
+                self.message,
+                self.attachments,
+                lambda text: self._on_chunk(text, stream_id, stop_flag),
+                stop_flag,
             )
             # Only emit finished if we weren't stopped
-            if not self._is_stopped():
-                self.finished.emit(response)
+            if not stop_flag.is_set():
+                self.finished.emit(stream_id)
 
         except Exception as e:
             # Only emit error if we weren't stopped
-            if not self._is_stopped():
-                self.error.emit(str(e))
+            if not stop_flag.is_set():
+                self.error.emit(str(e), stream_id)
 
-    def _on_chunk(self, text: str) -> None:
+    def _on_chunk(self, text: str, stream_id: int, stop_flag: threading.Event) -> None:
         """Handle a streamed text chunk by emitting it to the UI thread.
 
         Args:
             text (str): The text chunk received from the AI stream.
+            stream_id (int): The generation ID for this stream invocation.
+            stop_flag (threading.Event): The cancellation flag for this stream.
         """
-        # Emit chunk text to UI thread only if not stopped
-        if text and not self._is_stopped():
-            self.progress.emit(text)
+        if text and not stop_flag.is_set():
+            self.progress.emit(text, stream_id)
 
-    def _on_response_ready(self) -> None:
-        """Handle successful AI response."""
-        # Finalize streaming bubble
+    def _on_response_ready(self, stream_id: int) -> None:
+        """Handle successful AI response.
+
+        Args:
+            stream_id (int): The generation ID of the completed stream.
+        """
+        if stream_id != self.stream_id:
+            return
         self.chat_area.finalize_assistant_stream()
 
-    def _on_response_error(self, error: str) -> None:
+    def _on_response_error(self, error: str, stream_id: int) -> None:
         """Handle AI response error.
 
         Args:
             error (str): The error message from the AI response.
+            stream_id (int): The generation ID of the stream that errored.
         """
+        if stream_id != self.stream_id:
+            return
         error_msg = f"Error generating response: {error}"
         self.chat_area.show_stream_error(error_msg)
 
-    def _on_response_chunk(self, chunk: str) -> None:
+    def _on_response_chunk(self, chunk: str, stream_id: int) -> None:
         """Stream chunk text into the current assistant bubble.
 
         Args:
             chunk (str): Text chunk from the AI response stream.
+            stream_id (int): The generation ID that emitted this chunk.
         """
+        if stream_id != self.stream_id:
+            return
         # Lazily create the assistant bubble only when first chunk arrives
         if self.chat_area.streaming_bubble is None:
             self.chat_area.start_assistant_stream()

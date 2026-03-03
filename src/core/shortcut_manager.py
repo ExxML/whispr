@@ -61,7 +61,7 @@ class ShortcutManager(QObject):
     scroll_signal = pyqtSignal(int)
     quit_signal = pyqtSignal()
     screenshot_signal = pyqtSignal()
-    clear_chat_signal = pyqtSignal()
+    clear_all_chat_signal = pyqtSignal()
     minimize_signal = pyqtSignal()
     toggle_signal = pyqtSignal()
     send_message_signal = pyqtSignal(str)
@@ -80,7 +80,7 @@ class ShortcutManager(QObject):
         self.scroll_signal.connect(self.main_window.chat_area.shortcut_scroll)
         self.quit_signal.connect(self.main_window.quit_app)
         self.screenshot_signal.connect(self.screenshot_manager.take_screenshot)
-        self.clear_chat_signal.connect(self.main_window.chat_area.clear_chat)
+        self.clear_all_chat_signal.connect(self.main_window._clear_all_chat)
         self.minimize_signal.connect(self.main_window.hide)
         self.toggle_signal.connect(self.main_window.toggle_window_visibility)
         self.send_message_signal.connect(self.main_window.send_message)
@@ -149,7 +149,7 @@ class ShortcutManager(QObject):
             (MOD_CTRL | MOD_SHIFT, VK_DOWN): (self._scroll_down, True),
             (MOD_CTRL | MOD_SHIFT, ord("S")): (self._screenshot, False),
             (MOD_CTRL, ord("Q")): (self._minimize, False),
-            (MOD_CTRL, ord("N")): (self._clear_chat, False),
+            (MOD_CTRL, ord("N")): (self._clear_all_chat, False),
             (MOD_CTRL, ord("D")): (self._generate_with_screenshot, False),
             (MOD_CTRL, ord("G")): (self._generate_with_screenshot_fix, False),
         }
@@ -463,9 +463,9 @@ class ShortcutManager(QObject):
         """Minimize the main window"""
         self.minimize_signal.emit()
 
-    def _clear_chat(self) -> None:
+    def _clear_all_chat(self) -> None:
         """Clear the chat history"""
-        self.clear_chat_signal.emit()
+        self.clear_all_chat_signal.emit()
 
     def _generate_with_screenshot(self) -> None:
         """Take a screenshot then automatically generate content."""

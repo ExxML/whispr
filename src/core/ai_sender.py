@@ -1,5 +1,6 @@
 import mimetypes
 import os
+import threading
 from pathlib import Path
 from typing import Callable
 
@@ -38,6 +39,7 @@ class AISender:
         user_input: str,
         attachments: list[str] | None = None,
         on_chunk: Callable[[str], None] | None = None,
+        stop_flag: threading.Event | None = None,
     ) -> str:
         """Send a message and stream the response from the Gemini model.
 
@@ -45,6 +47,7 @@ class AISender:
             user_input (str): The user's input text to send to the model.
             attachments (list[str], optional): List of file paths to attach to the request.
             on_chunk (callable, optional): Callback invoked with each text chunk as it streams.
+            stop_flag (threading.Event, optional): When set, the stream is aborted immediately.
 
         Returns:
             str: The full generated response text.
@@ -61,6 +64,9 @@ class AISender:
 
         full_response = ""
         for chunk in self.chat.send_message_stream(message):
+            # Break early if cancelled — closing the iterator shuts down the HTTP stream
+            if stop_flag is not None and stop_flag.is_set():
+                break
             if chunk.text:
                 full_response += chunk.text
                 print(chunk.text, end="", flush=True)

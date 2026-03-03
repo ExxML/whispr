@@ -52,7 +52,7 @@ class MainWindow(QWidget):
         if self.worker is not None:
             self.worker.stop()
 
-        self.chat_area.clear_chat()
+        self.chat_area.clear_chat_messages()
         self.ai_sender.reset_chat()
         self.screenshot_manager.clear_screenshots()
         app = QApplication.instance()
@@ -143,7 +143,9 @@ class MainWindow(QWidget):
         self.screenshot_tray = ScreenshotTray(self.screenshot_manager, self)
 
         # Create and add title bar buttons
-        self.clear_chat_button = ClearChatButton(self, self._clear_all, self.chat_area)
+        self.clear_chat_button = ClearChatButton(
+            self, self._clear_all_chat, self.chat_area
+        )
         header_layout = QHBoxLayout()
         header_layout.addWidget(self.clear_chat_button)
         header_layout.addStretch(1)
@@ -224,9 +226,10 @@ class MainWindow(QWidget):
         self.visibility_timer.timeout.connect(self._ensure_window_visible)
         self.visibility_timer.start()
 
-    def _clear_all(self) -> None:
+    def _clear_all_chat(self) -> None:
         """Clear all chat data, screenshots, and screenshot tray thumbnails."""
-        self.chat_area.clear_chat()
+        self.worker.stop()
+        self.chat_area.clear_chat_messages()
         self.ai_sender.reset_chat()
         self.screenshot_manager.clear_screenshots()
         self.screenshot_tray.clear()

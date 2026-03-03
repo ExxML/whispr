@@ -103,8 +103,11 @@ class ChatArea(QScrollArea):
         self.streaming_bubble.set_bot_message(error_msg)
         self._reset_stream()
 
-    def clear_chat(self) -> None:
+    def clear_chat_messages(self) -> None:
         """Clear all messages from the chat area."""
+        # Reset streaming state before deleting widgets to avoid dangling references
+        self._reset_stream()
+
         # Remove all widgets except the stretch
         while self.chat_layout.count() > 1:
             item = self.chat_layout.takeAt(0)
