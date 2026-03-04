@@ -137,6 +137,7 @@ class MainWindow(QWidget):
         self.chat_area = ChatArea(self)
 
         # Create input field
+        self._last_input_height: int = 0
         self.input_field = InputField(self)
 
         # Create screenshot tray as a floating overlay (not in any layout)
@@ -198,6 +199,7 @@ class MainWindow(QWidget):
 
         # Add input field
         self.input_field.message_sent.connect(self.send_message)
+        self.input_field.height_changed.connect(self._on_input_height_changed)
         main_layout.addWidget(self.input_field)
 
         # Position the floating screenshot tray above the input field
@@ -210,15 +212,15 @@ class MainWindow(QWidget):
         self.show()
 
         # Set display affinity to exclude main window from screen capture (Windows 10+)
-        # hwnd = int(self.winId())
-        # WDA_EXCLUDEFROMCAPTURE = 0x00000011
-        # result = ctypes.windll.user32.SetWindowDisplayAffinity(
-        #     hwnd, WDA_EXCLUDEFROMCAPTURE
-        # )
-        # if result == 0:
-        #     print(
-        #         "Warning: SetWindowDisplayAffinity failed. May appear in screenshots."
-        #     )
+        hwnd = int(self.winId())
+        WDA_EXCLUDEFROMCAPTURE = 0x00000011
+        result = ctypes.windll.user32.SetWindowDisplayAffinity(
+            hwnd, WDA_EXCLUDEFROMCAPTURE
+        )
+        if result == 0:
+            print(
+                "Warning: SetWindowDisplayAffinity failed. May appear in screenshots."
+            )
 
         # Setup timer to raise main window so it is always visible (certain Windows operations override the stay on top hint)
         self.visibility_timer = QTimer(self)
@@ -257,6 +259,18 @@ class MainWindow(QWidget):
         for child in widget.findChildren(QWidget):
             child.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
             child.unsetCursor()
+
+    def _on_input_height_changed(self, new_height: int) -> None:
+        """Resize the window downward when the input field height changes.
+
+        Args:
+            height (int): The new height of the input field in pixels.
+        """
+        if self._last_input_height != 0:
+            self.resize(
+                self.width(), self.height() + (new_height - self._last_input_height)
+            )
+        self._last_input_height = new_height
 
     def _ensure_window_visible(self) -> None:
         """Raise the main window if it is no longer the topmost window."""

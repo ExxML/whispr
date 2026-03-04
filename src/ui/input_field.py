@@ -7,6 +7,7 @@ class InputField(QWidget):
     """Input bar with a text field."""
 
     message_sent = pyqtSignal(str)
+    height_changed = pyqtSignal(int)
     _return_pressed = pyqtSignal()
 
     def __init__(self, main_window: QWidget) -> None:
@@ -25,6 +26,7 @@ class InputField(QWidget):
 
         self.input_field = _AutoResizeTextEdit()
         self.input_field.setPlaceholderText("How can I help you?")
+        self.input_field.height_changed.connect(self.height_changed)
         self._return_pressed.connect(self._send_message)
 
         font = QFont("Microsoft JhengHei", 10)
@@ -36,8 +38,8 @@ class InputField(QWidget):
                 background-color: rgba(255, 255, 255, 0.2);
                 color: rgba(255, 255, 255, 1.0);
                 border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 13px;
-                padding: 3px 10px;
+                border-radius: 14px;
+                padding: 2px 6px;
             }
             QTextEdit:focus {
                 border: 1px solid rgba(255, 255, 255, 0.8);
@@ -50,9 +52,9 @@ class InputField(QWidget):
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
         """Handle key press events, emitting _return_pressed on unmodified Enter."""
         if (
-            event is not None and
-            event.key() == Qt.Key.Key_Return and
-            not event.modifiers() & Qt.KeyboardModifier.ShiftModifier
+            event is not None
+            and event.key() == Qt.Key.Key_Return
+            and not event.modifiers() & Qt.KeyboardModifier.ShiftModifier
         ):
             self._return_pressed.emit()
             event.accept()
@@ -75,13 +77,17 @@ class InputField(QWidget):
 class _AutoResizeTextEdit(QTextEdit):
     """A QTextEdit that automatically resizes its height to fit its content."""
 
+    height_changed = pyqtSignal(int)
+
     MAX_LINES = 10
 
     def __init__(self) -> None:
         super().__init__()
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        self.document().contentsChanged.connect(self._adjust_height)
+        doc = self.document()
+        assert doc is not None
+        doc.contentsChanged.connect(self._adjust_height)
         QTimer.singleShot(0, self._adjust_height)
 
     def _adjust_height(self) -> None:
@@ -90,13 +96,18 @@ class _AutoResizeTextEdit(QTextEdit):
         line_height = font_metrics.lineSpacing()
         max_height = line_height * self.MAX_LINES
 
-        doc_height = self.document().size().height()
+        doc = self.document()
+        assert doc is not None
+        doc_height = doc.size().height()
         margins = self.contentsMargins().top() + self.contentsMargins().bottom()
         desired_height = int(doc_height + margins)
 
         if desired_height > max_height:
             self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            self.setFixedHeight(int(max_height + margins))
+            new_height = int(max_height + margins)
         else:
             self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self.setFixedHeight(desired_height)
+            new_height = desired_height
+
+        self.setFixedHeight(new_height)
+        self.height_changed.emit(new_height)
