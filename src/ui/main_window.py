@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout,
 
 from ui.chat_area import ChatArea
 from ui.clear_chat_button import ClearChatButton
-from ui.input_bar import InputBar
+from ui.input_field import InputField
 from ui.screenshot_tray import ScreenshotTray
 from core.ai_receiver import AIReceiver
 from core.ai_sender import AISender
@@ -15,7 +15,7 @@ from core.screenshot_manager import ScreenshotManager
 
 
 class MainWindow(QWidget):
-    """Main application window containing the chat area, input bar, and title bar buttons."""
+    """Main application window containing the chat area, input field, and title bar buttons."""
 
     BG_COLOR = QColor(20, 20, 20, 153)
 
@@ -71,7 +71,7 @@ class MainWindow(QWidget):
         Args:
             event (QMouseEvent): The mouse press event.
         """
-        self.input_bar.input_field.setFocus()
+        self.input_field.input_field.setFocus()
         super().mousePressEvent(event)
 
     # Override paintEvent to draw app window
@@ -136,8 +136,8 @@ class MainWindow(QWidget):
         # Create chat area
         self.chat_area = ChatArea(self)
 
-        # Create input bar
-        self.input_bar = InputBar(self)
+        # Create input field
+        self.input_field = InputField(self)
 
         # Create screenshot tray as a floating overlay (not in any layout)
         self.screenshot_tray = ScreenshotTray(self.screenshot_manager, self)
@@ -196,11 +196,11 @@ class MainWindow(QWidget):
         # Add chat area
         main_layout.addWidget(self.chat_area, stretch=1)
 
-        # Add input bar
-        self.input_bar.message_sent.connect(self.send_message)
-        main_layout.addWidget(self.input_bar)
+        # Add input field
+        self.input_field.message_sent.connect(self.send_message)
+        main_layout.addWidget(self.input_field)
 
-        # Position the floating screenshot tray above the input bar
+        # Position the floating screenshot tray above the input field
         self.screenshot_tray.raise_()
         self.screenshot_tray.visibility_changed.connect(self._position_screenshot_tray)
 
@@ -210,15 +210,15 @@ class MainWindow(QWidget):
         self.show()
 
         # Set display affinity to exclude main window from screen capture (Windows 10+)
-        hwnd = int(self.winId())
-        WDA_EXCLUDEFROMCAPTURE = 0x00000011
-        result = ctypes.windll.user32.SetWindowDisplayAffinity(
-            hwnd, WDA_EXCLUDEFROMCAPTURE
-        )
-        if result == 0:
-            print(
-                "Warning: SetWindowDisplayAffinity failed. May appear in screenshots."
-            )
+        # hwnd = int(self.winId())
+        # WDA_EXCLUDEFROMCAPTURE = 0x00000011
+        # result = ctypes.windll.user32.SetWindowDisplayAffinity(
+        #     hwnd, WDA_EXCLUDEFROMCAPTURE
+        # )
+        # if result == 0:
+        #     print(
+        #         "Warning: SetWindowDisplayAffinity failed. May appear in screenshots."
+        #     )
 
         # Setup timer to raise main window so it is always visible (certain Windows operations override the stay on top hint)
         self.visibility_timer = QTimer(self)
@@ -235,12 +235,12 @@ class MainWindow(QWidget):
         self.screenshot_tray.clear()
 
     def _position_screenshot_tray(self) -> None:
-        """Place the screenshot tray above the input bar, floating over the chat area."""
+        """Place the screenshot tray above the input field, floating over the chat area."""
         tray = self.screenshot_tray
         tray_h = tray.height()
         tray.setGeometry(
             0,
-            self.input_bar.y() - tray_h,
+            self.input_field.y() - tray_h,
             self.width(),
             tray_h,
         )

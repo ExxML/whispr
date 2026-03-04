@@ -80,7 +80,7 @@ class ScreenshotThumbnail(QWidget):
 
 
 class ScreenshotTray(QWidget):
-    """Horizontal tray that displays pending screenshot thumbnails above the input bar."""
+    """Horizontal tray that displays pending screenshot thumbnails above the input field."""
 
     visibility_changed = pyqtSignal()
 
