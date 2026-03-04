@@ -110,4 +110,4 @@ class _AutoResizeTextEdit(QTextEdit):
             new_height = desired_height
 
         self.setFixedHeight(new_height)
-        self.height_changed.emit(new_height)
+        QTimer.singleShot(0, lambda: self.height_changed.emit(new_height))
