@@ -44,6 +44,13 @@ class InputField(QWidget):
             QTextEdit:focus {
                 border: 1px solid rgba(255, 255, 255, 0.8);
             }
+            QScrollBar:vertical {
+                width: 4px;
+                margin: 2px 0px 2px 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: rgba(255, 255, 255, 0.4);
+            }
         """)
 
         input_row.addWidget(self.input_field)
@@ -83,7 +90,7 @@ class _AutoResizeTextEdit(QTextEdit):
 
     def __init__(self) -> None:
         super().__init__()
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         doc = self.document()
         assert doc is not None
@@ -101,13 +108,9 @@ class _AutoResizeTextEdit(QTextEdit):
         doc_height = doc.size().height()
         margins = self.contentsMargins().top() + self.contentsMargins().bottom()
         desired_height = int(doc_height + margins)
-
-        if desired_height > max_height:
-            self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-            new_height = int(max_height + margins)
-        else:
-            self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            new_height = desired_height
+        new_height = (
+            max_height + margins if desired_height > max_height else desired_height
+        )
 
         self.setFixedHeight(new_height)
         QTimer.singleShot(0, lambda: self.height_changed.emit(new_height))
