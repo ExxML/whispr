@@ -62,6 +62,7 @@ class InputField(QWidget):
         self.input_field.focus_out.connect(
             lambda: self.input_container.setStyleSheet(self.CONTAINER_STYLE)
         )
+        self.input_field.send_requested.connect(self._send_message)
 
         font = QFont("Microsoft JhengHei", 10)
         self.input_field.setFont(font)
@@ -91,18 +92,6 @@ class InputField(QWidget):
         outer_row.addWidget(self.input_container)
         outer_layout.addLayout(outer_row)
 
-    def keyPressEvent(self, event: QKeyEvent | None) -> None:
-        """Handle key press events, sending message on unmodified Enter."""
-        if (
-            event is not None
-            and event.key() == Qt.Key.Key_Return
-            and not event.modifiers() & Qt.KeyboardModifier.ShiftModifier
-        ):
-            self._send_message()
-            event.accept()
-            return
-        super().keyPressEvent(event)
-
     def _send_message(self) -> None:
         """Send the current message and clear the input field."""
         message = self.input_field.toPlainText().strip()
@@ -119,9 +108,10 @@ class InputField(QWidget):
 class _AutoResizeTextEdit(QTextEdit):
     """A QTextEdit that automatically resizes its height to fit its content."""
 
-    height_changed = pyqtSignal(int)
     focus_in = pyqtSignal()
     focus_out = pyqtSignal()
+    height_changed = pyqtSignal(int)
+    send_requested = pyqtSignal()
 
     MAX_LINES = 10
 
@@ -134,6 +124,18 @@ class _AutoResizeTextEdit(QTextEdit):
         assert doc is not None
         doc.contentsChanged.connect(self._adjust_height)
         QTimer.singleShot(0, self._adjust_height)
+
+    def keyPressEvent(self, event: QKeyEvent | None) -> None:
+        """Send on plain Enter; insert newline on Shift+Enter."""
+        if (
+            event is not None
+            and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)
+            and not event.modifiers() & Qt.KeyboardModifier.ShiftModifier
+        ):
+            self.send_requested.emit()
+            event.accept()
+            return
+        super().keyPressEvent(event)
 
     def focusInEvent(self, event: QFocusEvent | None) -> None:
         """Emit focus_in when the widget gains keyboard focus."""
