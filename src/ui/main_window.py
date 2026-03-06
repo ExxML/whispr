@@ -137,7 +137,6 @@ class MainWindow(QWidget):
         self.chat_area = ChatArea(self)
 
         # Create input field
-        self._last_input_height: int = 0
         self.input_field = InputField(self)
 
         # Create screenshot tray as a floating overlay (not in any layout)
@@ -260,17 +259,13 @@ class MainWindow(QWidget):
             child.setAttribute(Qt.WidgetAttribute.WA_SetCursor, False)
             child.unsetCursor()
 
-    def _on_input_height_changed(self, new_height: int) -> None:
+    def _on_input_height_changed(self, delta_height: int) -> None:
         """Resize the window downward when the input field height changes.
 
         Args:
-            height (int): The new height of the input field in pixels.
+            delta_height (int): The change in height of the input field in pixels.
         """
-        if self._last_input_height != 0:
-            self.resize(
-                self.width(), self.height() + (new_height - self._last_input_height)
-            )
-        self._last_input_height = new_height
+        self.resize(self.width(), self.height() + delta_height)
 
     def _ensure_window_visible(self) -> None:
         """Raise the main window if it is no longer the topmost window."""

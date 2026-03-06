@@ -1,6 +1,8 @@
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QFont, QKeyEvent
+from PyQt6.QtGui import QFocusEvent, QFont, QKeyEvent
 from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
+
+from ui.input_settings import InputSettings
 
 
 class InputField(QWidget):
@@ -8,7 +10,21 @@ class InputField(QWidget):
 
     message_sent = pyqtSignal(str)
     height_changed = pyqtSignal(int)
-    _return_pressed = pyqtSignal()
+
+    CONTAINER_STYLE = """
+        QWidget {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 14px;
+        }
+    """
+    CONTAINER_FOCUS_STYLE = """
+        QWidget {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 14px;
+        }
+    """
 
     def __init__(self, main_window: QWidget) -> None:
         super().__init__(main_window)
@@ -20,29 +36,43 @@ class InputField(QWidget):
         outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.setSpacing(0)
 
-        input_row = QHBoxLayout()
-        input_row.setContentsMargins(12, 12, 12, 12)
-        input_row.setSpacing(8)
+        outer_row = QHBoxLayout()
+        outer_row.setContentsMargins(12, 12, 12, 12)
+        outer_row.setSpacing(0)
+
+        # Grey rounded container that holds both the text edit and the settings row
+        self.input_container = QWidget()
+        self.input_container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.input_container.setStyleSheet(self.CONTAINER_STYLE)
+
+        container_layout = QVBoxLayout(self.input_container)
+        container_layout.setContentsMargins(8, 8, 8, 6)
+        container_layout.setSpacing(0)
 
         self.input_field = _AutoResizeTextEdit()
         self.input_field.setPlaceholderText("How can I help you?")
-        self.input_field.height_changed.connect(self.height_changed)
-        self._return_pressed.connect(self._send_message)
+        self.input_field.height_changed.connect(
+            lambda delta: QTimer.singleShot(
+                0, lambda d=delta: self.height_changed.emit(d)
+            )
+        )
+        self.input_field.focus_in.connect(
+            lambda: self.input_container.setStyleSheet(self.CONTAINER_FOCUS_STYLE)
+        )
+        self.input_field.focus_out.connect(
+            lambda: self.input_container.setStyleSheet(self.CONTAINER_STYLE)
+        )
 
         font = QFont("Microsoft JhengHei", 10)
         self.input_field.setFont(font)
 
-        # Style the input field
+        # Text edit is transparent; the container provides the visual frame
         self.input_field.setStyleSheet("""
             QTextEdit {
-                background-color: rgba(255, 255, 255, 0.2);
+                background-color: transparent;
                 color: rgba(255, 255, 255, 1.0);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                border-radius: 14px;
+                border: none;
                 padding: 2px 6px;
-            }
-            QTextEdit:focus {
-                border: 1px solid rgba(255, 255, 255, 0.8);
             }
             QScrollBar:vertical {
                 width: 4px;
@@ -53,17 +83,22 @@ class InputField(QWidget):
             }
         """)
 
-        input_row.addWidget(self.input_field)
-        outer_layout.addLayout(input_row)
+        self.settings = InputSettings(self.input_container)
+
+        container_layout.addWidget(self.input_field)
+        container_layout.addWidget(self.settings)
+
+        outer_row.addWidget(self.input_container)
+        outer_layout.addLayout(outer_row)
 
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
-        """Handle key press events, emitting _return_pressed on unmodified Enter."""
+        """Handle key press events, sending message on unmodified Enter."""
         if (
             event is not None
             and event.key() == Qt.Key.Key_Return
             and not event.modifiers() & Qt.KeyboardModifier.ShiftModifier
         ):
-            self._return_pressed.emit()
+            self._send_message()
             event.accept()
             return
         super().keyPressEvent(event)
@@ -85,17 +120,30 @@ class _AutoResizeTextEdit(QTextEdit):
     """A QTextEdit that automatically resizes its height to fit its content."""
 
     height_changed = pyqtSignal(int)
+    focus_in = pyqtSignal()
+    focus_out = pyqtSignal()
 
     MAX_LINES = 10
 
     def __init__(self) -> None:
         super().__init__()
+        self._prev_height: int = 0
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         doc = self.document()
         assert doc is not None
         doc.contentsChanged.connect(self._adjust_height)
         QTimer.singleShot(0, self._adjust_height)
+
+    def focusInEvent(self, event: QFocusEvent | None) -> None:
+        """Emit focus_in when the widget gains keyboard focus."""
+        super().focusInEvent(event)
+        self.focus_in.emit()
+
+    def focusOutEvent(self, event: QFocusEvent | None) -> None:
+        """Emit focus_out when the widget loses keyboard focus."""
+        super().focusOutEvent(event)
+        self.focus_out.emit()
 
     def _adjust_height(self) -> None:
         """Adjust height based on document content, capped at MAX_LINES."""
@@ -113,4 +161,8 @@ class _AutoResizeTextEdit(QTextEdit):
         )
 
         self.setFixedHeight(new_height)
-        QTimer.singleShot(0, lambda: self.height_changed.emit(new_height))
+        if self._prev_height != 0:
+            delta = new_height - self._prev_height
+            if delta != 0:
+                QTimer.singleShot(0, lambda d=delta: self.height_changed.emit(d))
+        self._prev_height = new_height
