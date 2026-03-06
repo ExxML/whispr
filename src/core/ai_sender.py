@@ -7,7 +7,6 @@ from typing import Callable
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from google.genai.chats import Chat
 
 
 MODEL = "gemini-3-flash-preview"
@@ -26,13 +25,13 @@ class AISender:
         base_dir = Path(__file__).resolve().parent.parent.parent
         load_dotenv(base_dir / ".env")
 
-        # Initialize Gemini client and start a chat session
+        # Initialize Gemini client and history
         self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        self.chat = self._create_chat()
+        self.history: list[types.Content] = []
 
     def reset_chat(self) -> None:
         """Reset the chat session, clearing all conversation history."""
-        self.chat = self._create_chat()
+        self.history = []
 
     def send_message(
         self,
@@ -52,18 +51,23 @@ class AISender:
         Returns:
             str: The full generated response text.
         """
-        # Build message parts from attachments
-        message: list[types.Part | str] = []
+        # Build user message parts from attachments and text
+        parts: list[types.Part] = []
         for filepath in attachments or []:
             mime_type = mimetypes.guess_type(filepath)[0] or "application/octet-stream"
             with open(filepath, "rb") as f:
-                message.append(
-                    types.Part.from_bytes(data=f.read(), mime_type=mime_type)
-                )
-        message.append(user_input)
+                parts.append(types.Part.from_bytes(data=f.read(), mime_type=mime_type))
+        parts.append(types.Part.from_text(text=user_input))
+
+        user_content = types.Content(role="user", parts=parts)
+        contents = self.history + [user_content]
 
         full_response = ""
-        for chunk in self.chat.send_message_stream(message):
+        for chunk in self.client.models.generate_content_stream(
+            model=MODEL,
+            contents=contents,
+            config=CONFIG,
+        ):
             # Break early if cancelled — closing the iterator shuts down the HTTP stream
             if stop_flag is not None and stop_flag.is_set():
                 break
@@ -76,12 +80,15 @@ class AISender:
                     except Exception:
                         pass
 
+        # Only persist the exchange to history if we were not cancelled mid-stream.
+        # Store the model turn as a single merged text part (matching what the API
+        # returns in non-streaming mode) rather than one part per streaming chunk.
+        if full_response and (stop_flag is None or not stop_flag.is_set()):
+            self.history.append(user_content)
+            self.history.append(
+                types.Content(
+                    role="model", parts=[types.Part.from_text(text=full_response)]
+                )
+            )
+
         return full_response
-
-    def _create_chat(self) -> Chat:
-        """Create a new Gemini chat session.
-
-        Returns:
-            Chat: A new chat session instance.
-        """
-        return self.client.chats.create(model=MODEL, config=CONFIG)
