@@ -1,6 +1,6 @@
-from PyQt6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSize, Qt, pyqtSignal
+from PyQt6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont, QPaintEvent, QPainter, QPen, QPolygon
-from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QSizePolicy, QWidget
+from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QWidget
 
 
 class InputSettings(QWidget):
@@ -39,8 +39,9 @@ class InputSettings(QWidget):
             self.model_combo.addItem(display, userData=model_id)
         self.model_combo.setCurrentIndex(1)  # Default: Gemini 2.5 Flash
         self.model_combo.setFont(QFont("Microsoft JhengHei", 8))
-        self.model_combo.setSizePolicy(
-            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        self.model_combo.view().setMinimumWidth(self.model_combo.sizeHint().width())
+        self.model_combo.view().setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
 
         # Style only the popup view; button/frame chrome is suppressed by _ModelComboBox.paintEvent
@@ -86,15 +87,6 @@ class _ModelComboBox(QComboBox):
         self.popup_open = False
         self.hiding = False
         self.anim: QPropertyAnimation | None = None
-
-    def sizeHint(self) -> QSize:
-        """Return a size wide enough to fit the widest item text plus the chevron arrow."""
-        fm = self.fontMetrics()
-        max_text_width = max(
-            (fm.horizontalAdvance(self.itemText(i)) for i in range(self.count())),
-            default=0,
-        )
-        return QSize(max_text_width + self.ARROW_W + self.TEXT_ARROW_GAP, super().sizeHint().height())
 
     def showPopup(self) -> None:
         """Open the popup and animate it expanding downward from zero height."""
