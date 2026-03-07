@@ -27,6 +27,7 @@ class MainWindow(QWidget):
         self.screenshot_manager = screenshot_manager
         self._init_UI()
         self.worker = AIReceiver(ai_sender, self.chat_area)
+        self.input_field.model_changed.connect(self.ai_sender.set_model)
 
     def toggle_window_visibility(self) -> None:
         """Toggle the main window between visible and hidden states."""

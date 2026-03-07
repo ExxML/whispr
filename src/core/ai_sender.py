@@ -9,7 +9,12 @@ from google import genai
 from google.genai import types
 
 
-MODEL = "gemini-3-flash-preview"
+MODELS: list[tuple[str, str]] = [
+    ("Gemini 2.5 Flash Lite", "gemini-2.5-flash-lite"),
+    ("Gemini 2.5 Flash", "gemini-2.5-flash"),
+    ("Gemini 3 Flash Preview", "gemini-3-flash-preview"),
+]  # Format: (<display name>, <model ID>)
+DEFAULT_MODEL = MODELS[2][1]
 CONFIG = types.GenerateContentConfig(
     thinking_config=types.ThinkingConfig(
         thinking_budget=0
@@ -27,7 +32,16 @@ class AISender:
 
         # Initialize Gemini client and history
         self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        self.model = DEFAULT_MODEL
         self.history: list[types.Content] = []
+
+    def set_model(self, model_id: str) -> None:
+        """Set the active Gemini model.
+
+        Args:
+            model_id (str): The model identifier string.
+        """
+        self.model = model_id
 
     def reset_chat(self) -> None:
         """Reset the chat session, clearing all conversation history."""
@@ -64,7 +78,7 @@ class AISender:
 
         full_response = ""
         for chunk in self.client.models.generate_content_stream(
-            model=MODEL,
+            model=self.model,
             contents=contents,
             config=CONFIG,
         ):
