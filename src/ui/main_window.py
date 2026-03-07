@@ -155,7 +155,7 @@ class MainWindow(QWidget):
         self.min_btn.clicked.connect(self.hide)
         self.min_btn.setStyleSheet("""
             QPushButton {
-                color: rgba(255, 255, 255, 0.3);
+                color: rgba(255, 255, 255, 77);
                 border: none;
                 font-size: 24px;
                 font-weight: bold;
@@ -163,8 +163,8 @@ class MainWindow(QWidget):
                 text-align: center;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.5);
-                color: rgba(0, 0, 0, 0.6);
+                background-color: rgba(255, 255, 255, 128);
+                color: rgba(0, 0, 0, 153);
                 border-radius: 0px;
                 margin-top: 1px;
             }
@@ -174,7 +174,7 @@ class MainWindow(QWidget):
         self.close_btn.clicked.connect(self.quit_app)
         self.close_btn.setStyleSheet("""
             QPushButton {
-                color: rgba(255, 255, 255, 0.3);
+                color: rgba(255, 255, 255, 77);
                 border: none;
                 font-size: 24px;
                 font-weight: bold;
@@ -182,8 +182,8 @@ class MainWindow(QWidget):
                 text-align: center;
             }
             QPushButton:hover {
-                background-color: rgba(255, 77, 69, 0.5);
-                color: rgba(0, 0, 0, 0.6);
+                background-color: rgba(255, 77, 69, 128);
+                color: rgba(0, 0, 0, 153);
                 border-radius: 0px;
                 border-top-right-radius: 7px;
                 margin-top: 1px;

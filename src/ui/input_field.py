@@ -15,14 +15,14 @@ class InputField(QWidget):
     CONTAINER_STYLE = """
         QWidget {
             background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 128);
             border-radius: 14px;
         }
     """
     CONTAINER_FOCUS_STYLE = """
         QWidget {
             background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 179);
             border-radius: 14px;
         }
     """
@@ -72,7 +72,7 @@ class InputField(QWidget):
         self.input_field.setStyleSheet("""
             QTextEdit {
                 background-color: transparent;
-                color: rgba(255, 255, 255, 1.0);
+                color: rgba(255, 255, 255, 255);
                 border: none;
                 padding: 2px 6px;
             }
@@ -81,7 +81,7 @@ class InputField(QWidget):
                 margin: 2px 0px 2px 0px;
             }
             QScrollBar::handle:vertical {
-                background: rgba(255, 255, 255, 0.4);
+                background: rgba(255, 255, 255, 102);
             }
         """)
 

@@ -64,9 +64,9 @@ class ChatBubble(QWidget):
             # User messages: light gray, aligned right
             self.message_label.setStyleSheet("""
                 QLabel {
-                    color: rgba(255, 255, 255, 1.0);
+                    color: rgba(255, 255, 255, 255);
                     background-color: transparent;
-                    border: 1px solid rgba(255, 255, 255, 1.0);
+                    border: 1px solid rgba(255, 255, 255, 255);
                     border-radius: 8px;
                     padding: 5px 4px -3px 5px;  /* top, right, bottom, left */
                 }
@@ -88,7 +88,7 @@ class ChatBubble(QWidget):
             # Bot messages: transparent, aligned left
             self.message_label.setStyleSheet("""
                 QLabel {
-                    color: rgba(255, 255, 255, 1.0);
+                    color: rgba(255, 255, 255, 255);
                     background-color: transparent;
                     padding: 0px 0px 0px 1px;  /* top, right, bottom, left */
                 }
@@ -107,27 +107,27 @@ class ChatBubble(QWidget):
         """Advance the loading animation by one frame."""
         t = self._loading_frame * (2 * math.pi / 20)  # 20 frames per cycle (~1.6 s)
 
-        def dot_opacity(phase_offset: float) -> float:
+        def dot_opacity(phase_offset: float) -> int:
             """Compute a smooth opacity value using a sine wave with a phase offset.
 
             Args:
                 phase_offset (float): The phase offset in radians for this dot.
 
             Returns:
-                float: Opacity in the range [0.1, 0.95].
+                int: Opacity in the range [26, 242].
             """
-            return 0.1 + 0.85 * (math.sin(t + phase_offset) + 1) / 2
+            return int(255 * (0.1 + 0.85 * (math.sin(t + phase_offset) + 1) / 2))
 
         o1 = dot_opacity(0)
         o2 = dot_opacity(2 * math.pi / 3)
         o3 = dot_opacity(4 * math.pi / 3)
 
         html = (
-            f"<span style='color: rgba(255, 255, 255, {o1:.2f}); font-size: 16px;'>&#9679;</span>"
+            f"<span style='color: rgba(255, 255, 255, {o1}); font-size: 16px;'>&#9679;</span>"
             f"&nbsp;"
-            f"<span style='color: rgba(255, 255, 255, {o2:.2f}); font-size: 16px;'>&#9679;</span>"
+            f"<span style='color: rgba(255, 255, 255, {o2}); font-size: 16px;'>&#9679;</span>"
             f"&nbsp;"
-            f"<span style='color: rgba(255, 255, 255, {o3:.2f}); font-size: 16px;'>&#9679;</span>"
+            f"<span style='color: rgba(255, 255, 255, {o3}); font-size: 16px;'>&#9679;</span>"
         )
         self.message_label.setText(html)
         self._loading_frame = (self._loading_frame + 1) % 20

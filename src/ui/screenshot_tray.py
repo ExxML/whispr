@@ -38,8 +38,8 @@ class ScreenshotThumbnail(QWidget):
         self.remove_btn.clicked.connect(lambda: self.removed.emit(self.path))
         self.remove_btn.setStyleSheet("""
             QPushButton {
-                background-color: rgba(20, 20, 20, 0.60);
-                color: rgba(255, 255, 255, 0.90);
+                background-color: rgba(20, 20, 20, 153);
+                color: rgba(255, 255, 255, 230);
                 border: none;
                 border-radius: 8px;
                 font-size: 14px;
@@ -47,8 +47,8 @@ class ScreenshotThumbnail(QWidget):
                 padding-bottom: 3px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.60);
-                color: rgba(20, 20, 20, 0.90);
+                background-color: rgba(255, 255, 255, 153);
+                color: rgba(20, 20, 20, 230);
             }
         """)
 

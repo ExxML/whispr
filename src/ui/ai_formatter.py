@@ -64,7 +64,7 @@ def _format_inline_code(match: re.Match[str]) -> str:
     code = match.group(1)
     return (
         f"<code style='font-family: monospace; "
-        f"background-color: rgba(255, 255, 255, 0.1); "
+        f"background-color: rgba(255, 255, 255, 26); "
         f"padding: 0.2em 0.4em; "
         f"border-radius: 3px;'>{code}</code>"
     )
@@ -93,8 +93,8 @@ def _format_code_block(match: re.Match[str]) -> str:
 
     return (
         f"<div style='"
-        "background-color: rgba(0, 0, 0, 0.1); "
-        "color: rgba(255, 255, 255, 1.0); "
+        "background-color: rgba(0, 0, 0, 26); "
+        "color: rgba(255, 255, 255, 255); "
         "font-family: JetBrains Mono; "
         "font-size: 11pt; "
         "white-space: pre-wrap; "
