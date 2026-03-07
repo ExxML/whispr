@@ -43,7 +43,7 @@ class _ModelDropdown(QComboBox):
                 background-color: transparent;
                 color: rgba(255, 255, 255, 128);
                 border: none;
-                font-size: 11px;
+                font-size: 12px;
                 padding: 4px 4px;
             }
             QComboBox::drop-down {
@@ -52,7 +52,7 @@ class _ModelDropdown(QComboBox):
             }
             QComboBox QAbstractItemView {
                 background-color: rgba(20, 20, 20, 153);
-                color: rgba(255, 255, 255, 150);
+                color: rgba(255, 255, 255, 128);
                 border: 1px solid rgba(255, 255, 255, 50);
                 outline: 0;
             }
@@ -81,7 +81,7 @@ class _ModelDropdown(QComboBox):
 
         fm = QFontMetrics(self.font())
         max_width = max(fm.horizontalAdvance(display_name) for display_name, _ in MODELS)
-        self.setFixedWidth(max_width + 16)  # Additional padding to avoid text truncation
+        self.setFixedWidth(max_width + 25)  # Additional padding to avoid text truncation
 
         default_index = self.findData(DEFAULT_MODEL)
         if default_index >= 0:
@@ -113,10 +113,3 @@ class _ModelDropdown(QComboBox):
         painter.setFont(self.font())
         painter.drawText(QRect(text_rect), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, self.currentText())
         painter.end()
-
-    def showPopup(self) -> None:
-        """Offset the dropdown 5pixels lower than the default position."""
-        super().showPopup()
-        popup = self.view().parent()
-        if popup is not None:
-            popup.move(popup.x(), popup.y() + 5)
