@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFocusEvent, QFont, QKeyEvent
 from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
 
-from ui.input_settings import InputSettings
+from ui.input.input_settings import InputSettings
 
 
 class InputField(QWidget):

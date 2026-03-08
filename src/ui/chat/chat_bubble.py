@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
-from ui.ai_formatter import format_message
+from ui.chat.ai_formatter import format_message
 
 
 class ChatBubble(QWidget):

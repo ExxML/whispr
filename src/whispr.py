@@ -5,8 +5,8 @@ from PyQt6.QtWidgets import QApplication
 from core.ai_sender import AISender
 from core.screenshot_manager import ScreenshotManager
 from core.shortcut_manager import ShortcutManager
-from ui.main_window import MainWindow
-from ui.system_tray import SystemTray
+from ui.window.main_window import MainWindow
+from ui.window.system_tray import SystemTray
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QHBoxLayout, QWidget
 
-from ui.model_dropdown import ModelDropdown
+from ui.input.model_dropdown import ModelDropdown
 
 
 class InputSettings(QWidget):

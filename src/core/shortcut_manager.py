@@ -31,7 +31,7 @@ from core.win32_hook import (
     kernel32,
     user32,
 )
-from ui.main_window import MainWindow
+from ui.window.main_window import MainWindow
 
 
 class ShortcutManager(QObject):

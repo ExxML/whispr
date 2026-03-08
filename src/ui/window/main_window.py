@@ -5,10 +5,10 @@ from PyQt6.QtCore import QPoint, Qt, QTimer
 from PyQt6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen, QResizeEvent
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
-from ui.chat_area import ChatArea
-from ui.clear_chat_button import ClearChatButton
-from ui.input_field import InputField
-from ui.screenshot_tray import ScreenshotTray
+from ui.chat.chat_area import ChatArea
+from ui.window.clear_chat_button import ClearChatButton
+from ui.input.input_field import InputField
+from ui.window.screenshot_tray import ScreenshotTray
 from core.ai_receiver import AIReceiver
 from core.ai_sender import AISender
 from core.screenshot_manager import ScreenshotManager

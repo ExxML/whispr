@@ -3,7 +3,7 @@ import threading
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.ai_sender import AISender
-from ui.chat_area import ChatArea
+from ui.chat.chat_area import ChatArea
 
 
 class AIReceiver(QObject):
