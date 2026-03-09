@@ -10,6 +10,7 @@ class InputField(QWidget):
 
     message_sent = pyqtSignal(str)
     model_changed = pyqtSignal(str)
+    thinking_mode_changed = pyqtSignal(bool)
     height_changed = pyqtSignal(int)
 
     CONTAINER_STYLE = """
@@ -87,6 +88,7 @@ class InputField(QWidget):
 
         self.settings = InputSettings(self.input_container)
         self.settings.model_changed.connect(self.model_changed)
+        self.settings.thinking_mode_changed.connect(self.thinking_mode_changed)
 
         container_layout.addWidget(self.input_field)
         container_layout.addWidget(self.settings)

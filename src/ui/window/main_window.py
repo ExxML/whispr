@@ -28,6 +28,7 @@ class MainWindow(QWidget):
         self._init_UI()
         self.worker = AIReceiver(ai_sender, self.chat_area)
         self.input_field.model_changed.connect(self.ai_sender.set_model)
+        self.input_field.thinking_mode_changed.connect(self.ai_sender.set_thinking_mode)
 
     def toggle_window_visibility(self) -> None:
         """Toggle the main window between visible and hidden states."""

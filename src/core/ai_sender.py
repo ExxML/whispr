@@ -15,11 +15,6 @@ MODELS: list[tuple[str, str]] = [
     ("Gemini 3 Flash Preview", "gemini-3-flash-preview"),
 ]  # Format: (<display name>, <model ID>)
 DEFAULT_MODEL = MODELS[2][1]
-CONFIG = types.GenerateContentConfig(
-    thinking_config=types.ThinkingConfig(
-        thinking_budget=0
-    )  # Disable thinking mode for faster responses
-)
 
 
 class AISender:
@@ -34,6 +29,11 @@ class AISender:
         self.client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         self.model = DEFAULT_MODEL
         self.history: list[types.Content] = []
+        self.config = types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(
+                thinking_budget=0
+            )  # Disable thinking mode for faster responses
+        )
 
     def set_model(self, model_id: str) -> None:
         """Set the active Gemini model.
@@ -42,6 +42,17 @@ class AISender:
             model_id (str): The model identifier string.
         """
         self.model = model_id
+
+    def set_thinking_mode(self, enabled: bool) -> None:
+        """Enable or disable AI thinking mode.
+
+        Args:
+            enabled (bool): True (budget=-1) to enable dynamic thinking, False (budget=0) to disable it.
+        """
+        budget = -1 if enabled else 0
+        self.config = types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=budget)
+        )
 
     def reset_chat(self) -> None:
         """Reset the chat session, clearing all conversation history."""
@@ -80,7 +91,7 @@ class AISender:
         for chunk in self.client.models.generate_content_stream(
             model=self.model,
             contents=contents,
-            config=CONFIG,
+            config=self.config,
         ):
             # Break early if cancelled — closing the iterator shuts down the HTTP stream
             if stop_flag is not None and stop_flag.is_set():

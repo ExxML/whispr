@@ -63,7 +63,7 @@ class ModelDropdown(QWidget):
         painter.setPen(QColor(255, 255, 255, 128))
         painter.setFont(self.font())
         painter.drawText(
-            QRect(-4, 0, self.width(), self.height()),
+            QRect(-5, 0, self.width(), self.height()),
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
             self.current_display,
         )
