@@ -34,16 +34,22 @@ class ModelDropdown(QWidget):
         self.shield: _PopupShield | None = None
         self._init_UI()
 
-    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:
-        """Close the popup on a mouse press outside it."""
-        if (
-            event is not None
-            and event.type() == QEvent.Type.MouseButtonPress
-            and isinstance(event, QMouseEvent)
-            and self.popup is not None
-            and not self.popup.geometry().contains(event.pos())
-        ):
+    def close_popup(self) -> None:
+        """Close the model selection popup if it is visible."""
+        if self.popup is not None:
             self.popup.close()
+
+    def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:
+        """Close the popup on a mouse press outside it or when the window loses focus."""
+        if event is not None and self.popup is not None:
+            if (
+                event.type() == QEvent.Type.MouseButtonPress
+                and isinstance(event, QMouseEvent)
+                and not self.popup.geometry().contains(event.pos())
+            ):
+                self.popup.close()
+            elif event.type() == QEvent.Type.WindowDeactivate:
+                self.popup.close()
         return super().eventFilter(watched, event)
 
     def mousePressEvent(self, event: QMouseEvent | None) -> None:
@@ -60,7 +66,7 @@ class ModelDropdown(QWidget):
     def paintEvent(self, _event: QPaintEvent | None) -> None:
         """Draw the current model name right-aligned."""
         painter = QPainter(self)
-        painter.setPen(QColor(255, 255, 255, 128))
+        painter.setPen(QColor(255, 255, 255, 150))
         painter.setFont(self.font())
         painter.drawText(
             QRect(-5, 0, self.width(), self.height()),
@@ -241,7 +247,7 @@ class _ModelItem(QWidget):
         if self.is_hovered:
             painter.setPen(QColor(255, 255, 255, 255))
         else:
-            painter.setPen(QColor(255, 255, 255, 128))
+            painter.setPen(QColor(255, 255, 255, 150))
 
         painter.setFont(self.font())
         text_rect = QRect(

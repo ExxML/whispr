@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-from PyQt6.QtGui import QFocusEvent, QFont, QKeyEvent
+from PyQt6.QtGui import QFont, QKeyEvent
 from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
 
 from ui.input.input_settings import InputSettings
@@ -12,21 +12,6 @@ class InputField(QWidget):
     model_changed = pyqtSignal(str)
     thinking_mode_changed = pyqtSignal(bool)
     height_changed = pyqtSignal(int)
-
-    CONTAINER_STYLE = """
-        QWidget {
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 128);
-            border-radius: 14px;
-        }
-    """
-    CONTAINER_FOCUS_STYLE = """
-        QWidget {
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 179);
-            border-radius: 14px;
-        }
-    """
 
     def __init__(self, main_window: QWidget) -> None:
         super().__init__(main_window)
@@ -45,7 +30,13 @@ class InputField(QWidget):
         # Grey rounded container that holds both the text edit and the settings row
         self.input_container = QWidget()
         self.input_container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.input_container.setStyleSheet(self.CONTAINER_STYLE)
+        self.input_container.setStyleSheet("""
+            QWidget {
+                background-color: transparent;
+                border: 1px solid rgba(255, 255, 255, 150);
+                border-radius: 14px;
+            }
+        """)
 
         container_layout = QVBoxLayout(self.input_container)
         container_layout.setContentsMargins(8, 8, 8, 6)
@@ -57,12 +48,6 @@ class InputField(QWidget):
             lambda delta: QTimer.singleShot(
                 0, lambda d=delta: self.height_changed.emit(d)
             )
-        )
-        self.input_field.focus_in.connect(
-            lambda: self.input_container.setStyleSheet(self.CONTAINER_FOCUS_STYLE)
-        )
-        self.input_field.focus_out.connect(
-            lambda: self.input_container.setStyleSheet(self.CONTAINER_STYLE)
         )
         self.input_field.send_requested.connect(self._send_message)
 
@@ -100,6 +85,7 @@ class InputField(QWidget):
         """Send the current message and clear the input field."""
         message = self.input_field.toPlainText().strip()
         if message:
+            self.settings.model_dropdown.close_popup()
             self.message_sent.emit(message)
             self.input_field.clear()
             self.input_field.setFocus()
@@ -112,8 +98,6 @@ class InputField(QWidget):
 class _AutoResizeTextEdit(QTextEdit):
     """A QTextEdit that automatically resizes its height to fit its content."""
 
-    focus_in = pyqtSignal()
-    focus_out = pyqtSignal()
     height_changed = pyqtSignal(int)
     send_requested = pyqtSignal()
 
@@ -140,16 +124,6 @@ class _AutoResizeTextEdit(QTextEdit):
             event.accept()
             return
         super().keyPressEvent(event)
-
-    def focusInEvent(self, event: QFocusEvent | None) -> None:
-        """Emit focus_in when the widget gains keyboard focus."""
-        super().focusInEvent(event)
-        self.focus_in.emit()
-
-    def focusOutEvent(self, event: QFocusEvent | None) -> None:
-        """Emit focus_out when the widget loses keyboard focus."""
-        super().focusOutEvent(event)
-        self.focus_out.emit()
 
     def _adjust_height(self) -> None:
         """Adjust height based on document content, capped at MAX_LINES."""

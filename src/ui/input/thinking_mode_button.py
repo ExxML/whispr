@@ -7,7 +7,6 @@ from PyQt6.QtGui import (
     QMouseEvent,
     QPainter,
     QPaintEvent,
-    QPen,
     QPixmap,
 )
 from PyQt6.QtWidgets import QWidget
@@ -24,8 +23,8 @@ class ThinkingModeButton(QWidget):
 
     ENABLED_OVERLAY_COLOR = QColor(255, 200, 0)
     DISABLED_OUTLINE_COLOR = QColor(255, 255, 255)
-    ENABLED_ICON_OPACITY = 0.75
-    DISABLED_ICON_OPACITY = 0.5
+    ENABLED_ICON_OPACITY = 255 / 255
+    DISABLED_ICON_OPACITY = 150 / 255
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -40,7 +39,9 @@ class ThinkingModeButton(QWidget):
         font.setPixelSize(10)
         fm = QFontMetrics(font)
         self._icon_size = fm.height()
-        widget_size = round(self._icon_size * 1.5)  # Make the yellow circle larger without increasing the icon size
+        widget_size = round(
+            self._icon_size * 1.5
+        )  # Make the yellow circle larger without increasing the icon size
         self.setFixedSize(widget_size, widget_size)
 
         self.icon_path = os.path.join(
@@ -52,7 +53,9 @@ class ThinkingModeButton(QWidget):
         self._pixmap_active.fill(Qt.GlobalColor.transparent)
         tint_painter = QPainter(self._pixmap_active)
         tint_painter.drawPixmap(0, 0, self._pixmap)
-        tint_painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
+        tint_painter.setCompositionMode(
+            QPainter.CompositionMode.CompositionMode_SourceIn
+        )
         tint_painter.fillRect(self._pixmap_active.rect(), self.ENABLED_OVERLAY_COLOR)
         tint_painter.end()
 
@@ -90,8 +93,12 @@ class ThinkingModeButton(QWidget):
             painter.restore()
 
         # Draw outline circle: yellow at icon opacity when active, white at icon opacity when inactive
-        outline_color = self.ENABLED_OVERLAY_COLOR if self._active else self.DISABLED_OUTLINE_COLOR
-        outline_opacity = self.ENABLED_ICON_OPACITY if self._active else self.DISABLED_ICON_OPACITY
+        outline_color = (
+            self.ENABLED_OVERLAY_COLOR if self._active else self.DISABLED_OUTLINE_COLOR
+        )
+        outline_opacity = (
+            self.ENABLED_ICON_OPACITY if self._active else self.DISABLED_ICON_OPACITY
+        )
         pen = painter.pen()
         pen.setColor(outline_color)
         pen.setWidthF(1.0)
