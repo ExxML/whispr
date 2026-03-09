@@ -19,10 +19,12 @@ class ClearChatButton(QPushButton):
         self.setFixedSize(36, 32)
         self.clicked.connect(on_click)
 
-        base_dir = os.getcwd()
-        assets_dir = os.path.join(base_dir, "src", "assets")
-        self.light_icon_path = os.path.join(assets_dir, "clear_chat_button_light.png")
-        self.dark_icon_path = os.path.join(assets_dir, "clear_chat_button_dark.png")
+        self.light_icon_path = os.path.join(
+            os.getcwd(), "src", "assets", "clear_chat_button_light.png"
+        )
+        self.dark_icon_path = os.path.join(
+            os.getcwd(), "src", "assets", "clear_chat_button_dark.png"
+        )
         self.setIcon(QIcon(self.light_icon_path))
         self.setIconSize(QSize(14, 14))
         self.setStyleSheet("""
