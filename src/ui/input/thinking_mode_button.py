@@ -24,7 +24,7 @@ class ThinkingModeButton(QWidget):
     ENABLED_OVERLAY_COLOR = QColor(255, 200, 0)
     DISABLED_OUTLINE_COLOR = QColor(255, 255, 255)
     ENABLED_ICON_OPACITY = 255 / 255
-    DISABLED_ICON_OPACITY = 150 / 255
+    DISABLED_ICON_OPACITY = 128 / 255
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)

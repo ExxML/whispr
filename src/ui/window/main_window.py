@@ -95,7 +95,7 @@ class MainWindow(QWidget):
             border_width, border_width, -border_width, -border_width
         )
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPen(QPen(QColor(255, 255, 255, 180), border_width))
+        painter.setPen(QPen(QColor(255, 255, 255, 128), border_width))
         painter.drawRoundedRect(border_rect, radius, radius)
 
     def _init_UI(self) -> None:

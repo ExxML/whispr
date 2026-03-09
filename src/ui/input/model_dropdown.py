@@ -66,7 +66,7 @@ class ModelDropdown(QWidget):
     def paintEvent(self, _event: QPaintEvent | None) -> None:
         """Draw the current model name right-aligned."""
         painter = QPainter(self)
-        painter.setPen(QColor(255, 255, 255, 150))
+        painter.setPen(QColor(255, 255, 255, 128))
         painter.setFont(self.font())
         painter.drawText(
             QRect(-5, 0, self.width(), self.height()),
@@ -247,7 +247,7 @@ class _ModelItem(QWidget):
         if self.is_hovered:
             painter.setPen(QColor(255, 255, 255, 255))
         else:
-            painter.setPen(QColor(255, 255, 255, 150))
+            painter.setPen(QColor(255, 255, 255, 128))
 
         painter.setFont(self.font())
         text_rect = QRect(

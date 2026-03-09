@@ -19,6 +19,9 @@ class InputField(QWidget):
 
     def _init_UI(self) -> None:
         """Initialize the input field UI layout and resizable text field."""
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.setSpacing(0)
@@ -33,7 +36,7 @@ class InputField(QWidget):
         self.input_container.setStyleSheet("""
             QWidget {
                 background-color: transparent;
-                border: 1px solid rgba(255, 255, 255, 150);
+                border: 1px solid rgba(255, 255, 255, 128);
                 border-radius: 14px;
             }
         """)
