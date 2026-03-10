@@ -77,6 +77,7 @@ class InputField(QWidget):
         self.settings = InputSettings(self.input_container)
         self.settings.model_changed.connect(self.model_changed)
         self.settings.thinking_mode_changed.connect(self.thinking_mode_changed)
+        self.height_changed.connect(self.settings.model_dropdown.reposition_popup)
 
         container_layout.addWidget(self.input_field)
         container_layout.addWidget(self.settings)

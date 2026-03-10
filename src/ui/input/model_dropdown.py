@@ -39,6 +39,21 @@ class ModelDropdown(QWidget):
         if self.popup is not None:
             self.popup.close()
 
+    def reposition_popup(self, delta: int) -> None:
+        """Shift the popup and shield vertically by the given delta.
+        Used for keeping the popup aligned with the dropdown button when the input field height changes.
+
+        Args:
+            delta (int): The number of pixels to move the popup downward.
+        """
+        if self.popup is None or not self.popup.isVisible():
+            return
+
+        new_geometry = self.popup.geometry().translated(0, delta)
+        self.popup.setGeometry(new_geometry)
+        if self.shield is not None:
+            self.shield.setGeometry(new_geometry)
+
     def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:
         """Close the popup on a mouse press outside it or when the window loses focus."""
         if event is not None and self.popup is not None:
