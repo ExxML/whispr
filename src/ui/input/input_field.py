@@ -32,9 +32,10 @@ class InputField(QWidget):
 
         # Grey rounded container that holds both the text edit and the settings row
         self.input_container = QWidget()
+        self.input_container.setObjectName("inputContainer")
         self.input_container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.input_container.setStyleSheet("""
-            QWidget {
+            QWidget#inputContainer {
                 background-color: transparent;
                 border: 1px solid rgba(255, 255, 255, 128);
                 border-radius: 14px;
@@ -65,12 +66,31 @@ class InputField(QWidget):
                 border: none;
                 padding: 2px 6px;
             }
+        """)
+        scrollbar = self.input_field.verticalScrollBar()
+        assert scrollbar is not None
+        scrollbar.setStyleSheet("""
             QScrollBar:vertical {
+                background-color: transparent;
                 width: 4px;
                 margin: 2px 0px 2px 0px;
+                border: none;
             }
             QScrollBar::handle:vertical {
-                background: rgba(255, 255, 255, 102);
+                background-color: rgba(255, 255, 255, 102);
+                border-radius: 2px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: rgba(255, 255, 255, 128);
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+                border: none;
+                background: transparent;
+            }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: transparent;
             }
         """)
 
