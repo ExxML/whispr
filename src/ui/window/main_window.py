@@ -39,7 +39,7 @@ class MainWindow(QWidget):
             self.raise_()  # Bring to front
 
     def hide(self) -> None:
-        """Close the model popup and update the backing store before hiding 
+        """Close the model popup and update the backing store before hiding
         so the popup does not flash when re-showing."""
         if hasattr(self, "input_field"):
             self.input_field.settings.model_dropdown.close_popup()
