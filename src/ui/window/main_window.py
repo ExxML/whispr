@@ -38,6 +38,15 @@ class MainWindow(QWidget):
             self.show()
             self.raise_()  # Bring to front
 
+    def hide(self) -> None:
+        """Close the model popup and update the backing store before hiding 
+        so the popup does not flash when re-showing."""
+        if hasattr(self, "input_field"):
+            self.input_field.settings.model_dropdown.close_popup()
+            self.repaint()
+            QApplication.processEvents()
+        super().hide()
+
     def send_message(self, message: str) -> None:
         """Send a user message with any pending screenshot attachments.
 
