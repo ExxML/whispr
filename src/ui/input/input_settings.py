@@ -21,7 +21,7 @@ class InputSettings(QWidget):
         """Initialize the settings row layout with the model selector dropdown."""
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setSpacing(6)
 
         self.model_dropdown.model_changed.connect(self.model_changed)
         self.thinking_mode_button.thinking_mode_changed.connect(
