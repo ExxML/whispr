@@ -11,7 +11,7 @@ from PyQt6.QtGui import (
     QPaintEvent,
     QPen,
 )
-from PyQt6.QtWidgets import QVBoxLayout, QWidget
+from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
 from core.ai_sender import DEFAULT_MODEL, MODELS
 
@@ -57,12 +57,14 @@ class ModelDropdown(QWidget):
     def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:
         """Close the popup on a mouse press outside it or when the window loses focus."""
         if event is not None and self.popup is not None:
-            if (
-                event.type() == QEvent.Type.MouseButtonPress
-                and isinstance(event, QMouseEvent)
-                and not self.popup.geometry().contains(event.pos())
+            if event.type() == QEvent.Type.MouseButtonPress and isinstance(
+                event, QMouseEvent
             ):
-                self.popup.close()
+                gp = event.globalPosition().toPoint()
+                if not self.popup.rect().contains(
+                    self.popup.mapFromGlobal(gp)
+                ) and not self.rect().contains(self.mapFromGlobal(gp)):
+                    self.popup.close()
             elif event.type() == QEvent.Type.WindowDeactivate:
                 self.popup.close()
         return super().eventFilter(watched, event)
@@ -101,8 +103,10 @@ class ModelDropdown(QWidget):
 
         fm = QFontMetrics(font)
         max_width = max(fm.horizontalAdvance(name) for name, _ in MODELS)
-        self.setFixedWidth(max_width + 25)
-        self.setFixedHeight(fm.height() + 8)
+        self.setFixedWidth(
+            max_width + 25
+        )  # Arbitrary extra space to avoid text truncation
+        self.setFixedHeight(fm.height() + 8)  # Arbitrary vertical padding
 
     def _show_popup(self) -> None:
         """Create and display the model selection popup above this widget."""
@@ -130,7 +134,9 @@ class ModelDropdown(QWidget):
 
         self.popup.raise_()
         self.popup.show()
-        main_window.installEventFilter(self)
+        app = QApplication.instance()
+        assert app is not None
+        app.installEventFilter(self)
 
     def _on_model_selected(self, display_name: str, model_id: str) -> None:
         """Handle a model selection from the popup."""
@@ -141,9 +147,9 @@ class ModelDropdown(QWidget):
 
     def _on_popup_closed(self) -> None:
         """Clean up the shield, event filter, and popup references."""
-        main_window = self.window()
-        if main_window is not None:
-            main_window.removeEventFilter(self)
+        app = QApplication.instance()
+        if app is not None:
+            app.removeEventFilter(self)
         if self.shield is not None:
             self.shield.close()
             self.shield = None
@@ -260,8 +266,21 @@ class _ModelItem(QWidget):
         painter = QPainter(self)
 
         if self.is_hovered:
+            # Paint semi-transparent background on hover
+            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+            offset = self.mapToParent(QPoint(0, 0))
+            parent = self.parentWidget()
+            assert parent is not None
+            popup_rect = QRectF(
+                -offset.x(), -offset.y(), parent.width(), parent.height()
+            )
+            path = QPainterPath()
+            path.addRoundedRect(popup_rect, 8, 8)
+            painter.fillPath(path, QColor(255, 255, 255, 25))
+            # Set text colour to max opacity
             painter.setPen(QColor(255, 255, 255, 255))
         else:
+            # Set text colour to lower opacity
             painter.setPen(QColor(255, 255, 255, 128))
 
         painter.setFont(self.font())
