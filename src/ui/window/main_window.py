@@ -42,7 +42,7 @@ class MainWindow(QWidget):
         """Close the model popup and update the backing store before hiding
         so the popup does not flash when re-showing."""
         if hasattr(self, "input_field"):
-            self.input_field.settings.model_dropdown.close_popup()
+            self.input_field.input_settings.model_dropdown.close_popup()
             self.repaint()
             QApplication.processEvents()
         super().hide()

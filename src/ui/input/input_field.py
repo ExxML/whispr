@@ -22,13 +22,9 @@ class InputField(QWidget):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        outer_layout = QVBoxLayout(self)
-        outer_layout.setContentsMargins(0, 0, 0, 0)
-        outer_layout.setSpacing(0)
-
-        outer_row = QHBoxLayout()
-        outer_row.setContentsMargins(12, 12, 12, 12)
-        outer_row.setSpacing(0)
+        root_layout = QHBoxLayout(self)
+        root_layout.setContentsMargins(12, 12, 12, 12)
+        root_layout.setSpacing(0)
 
         # Grey rounded container that holds both the text edit and the settings row
         self.input_container = QWidget()
@@ -42,9 +38,9 @@ class InputField(QWidget):
             }
         """)
 
-        container_layout = QVBoxLayout(self.input_container)
-        container_layout.setContentsMargins(8, 8, 8, 6)
-        container_layout.setSpacing(0)
+        input_container_layout = QVBoxLayout(self.input_container)
+        input_container_layout.setContentsMargins(8, 8, 8, 5)  # Smaller bottom margin due to vertically centered InputSettings row
+        input_container_layout.setSpacing(0)
 
         self.input_field = _AutoResizeTextEdit()
         self.input_field.setPlaceholderText("How can I help you?")
@@ -64,7 +60,7 @@ class InputField(QWidget):
                 background-color: transparent;
                 color: rgba(255, 255, 255, 255);
                 border: none;
-                padding: 2px 6px;
+                padding: 2px 6px 2px 6px;  /* top, right, bottom, left */
             }
         """)
         scrollbar = self.input_field.verticalScrollBar()
@@ -94,22 +90,21 @@ class InputField(QWidget):
             }
         """)
 
-        self.settings = InputSettings(self.input_container)
-        self.settings.model_changed.connect(self.model_changed)
-        self.settings.thinking_mode_changed.connect(self.thinking_mode_changed)
-        self.height_changed.connect(self.settings.model_dropdown.reposition_popup)
+        self.input_settings = InputSettings(self.input_container)
+        self.input_settings.model_changed.connect(self.model_changed)
+        self.input_settings.thinking_mode_changed.connect(self.thinking_mode_changed)
+        self.height_changed.connect(self.input_settings.model_dropdown.reposition_popup)
 
-        container_layout.addWidget(self.input_field)
-        container_layout.addWidget(self.settings)
+        input_container_layout.addWidget(self.input_field)
+        input_container_layout.addWidget(self.input_settings)
 
-        outer_row.addWidget(self.input_container)
-        outer_layout.addLayout(outer_row)
+        root_layout.addWidget(self.input_container)
 
     def _send_message(self) -> None:
         """Send the current message and clear the input field."""
         message = self.input_field.toPlainText().strip()
         if message:
-            self.settings.model_dropdown.close_popup()
+            self.input_settings.model_dropdown.close_popup()
             self.message_sent.emit(message)
             self.input_field.clear()
             self.input_field.setFocus()
