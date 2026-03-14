@@ -6,7 +6,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 
 
 class ScreenshotManager(QObject):
-    """Handles capturing screenshots of the primary screen."""
+    """Capture screenshots of the primary screen."""
 
     screenshot_added = pyqtSignal(str)
 

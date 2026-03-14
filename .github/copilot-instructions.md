@@ -85,8 +85,8 @@ def stop(self):
 
 **Multi-line docstrings:** Opening triple quotes on the same line as a short summary. Blank line after summary before sections. Closing triple quotes on their own line, aligned with the enclosing definition.
 
-**Sections** (include only if relevant):
-- `Args:` — List parameters with type in parentheses and description. Omit if there are no parameters.
+**Sections**:
+- `Args:` — List parameters with type in parentheses and description. Do not add " | None" if the parameter is a Qt object (all Qt objects can be None).Omit if there are no parameters.
 - `Returns:` — Describe the return value with type and description. Omit if `None`.
 
 Do not document unused parameters required only for overriding methods. 

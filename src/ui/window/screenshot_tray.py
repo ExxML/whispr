@@ -12,7 +12,7 @@ BTN_OVERHANG = BTN_SIZE // 2  # X button slightly protrudes beyond the edge of t
 
 
 class ScreenshotThumbnail(QWidget):
-    """Small preview thumbnail of a pending screenshot with a remove button."""
+    """Render a preview thumbnail of a pending screenshot."""
 
     removed = pyqtSignal(str)
 
@@ -80,7 +80,7 @@ class ScreenshotThumbnail(QWidget):
 
 
 class ScreenshotTray(QWidget):
-    """Horizontal tray that displays pending screenshot thumbnails above the input field."""
+    """Display pending screenshot thumbnails above the input field on a horizontal tray."""
 
     visibility_changed = pyqtSignal()
 

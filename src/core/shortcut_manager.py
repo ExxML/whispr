@@ -35,7 +35,7 @@ from ui.window.main_window import MainWindow
 
 
 class ShortcutManager(QObject):
-    """Manages global keyboard shortcuts via a Win32 low-level keyboard hook.
+    """Manage global keyboard shortcuts via a Win32 low-level keyboard hook.
 
     Key suppression strategy
     ------------------------
@@ -306,10 +306,9 @@ class ShortcutManager(QObject):
         user32.keybd_event(vk_code, scan_code, kb_flags, None)
 
     def _hook_thread_entry(self) -> None:
-        """Entry point for the keyboard hook thread.
+        """Install the keyboard hook and run its message loop.
 
-        Installs the low-level keyboard hook, then enters a message loop that
-        keeps the hook alive until a WM_QUIT message is posted.
+        Keep the hook alive until a WM_QUIT message is posted.
         """
         self.hook_thread_id = kernel32.GetCurrentThreadId()
         h_module = kernel32.GetModuleHandleW(None)
@@ -331,12 +330,12 @@ class ShortcutManager(QObject):
             self.hook_handle = None
 
     def _start_hook(self) -> None:
-        """Start the keyboard hook on a dedicated daemon thread"""
+        """Start the keyboard hook on a dedicated daemon thread."""
         hook_thread = threading.Thread(target=self._hook_thread_entry, daemon=True)
         hook_thread.start()
 
     def _stop_hook(self) -> None:
-        """Stop the keyboard hook and its message loop"""
+        """Stop the keyboard hook and its message loop."""
         if self.hook_thread_id is not None:
             user32.PostThreadMessageW(self.hook_thread_id, WM_QUIT, 0, 0)
             self.hook_thread_id = None
@@ -344,7 +343,7 @@ class ShortcutManager(QObject):
     # Hotkey Callback Functions
 
     def _setup_movement_distances(self) -> None:
-        """Determine screen geometry and movement distances"""
+        """Determine screen geometry and movement distances."""
         assert self.main_window.primary_screen is not None
         self.screen_rect = self.main_window.primary_screen.availableGeometry()
         self.max_move_distance_x = self.screen_rect.width() // 14
@@ -370,7 +369,7 @@ class ShortcutManager(QObject):
         self.animation_timer.start(self.animation_frame_time)
 
     def _animate_step(self) -> None:
-        """Advance one frame of the movement animation"""
+        """Advance one frame of the movement animation."""
         assert self.animation_start_pos is not None
         assert self.animation_target_pos is not None
         self.animation_progress += self.animation_frame_time / self.animation_duration
@@ -396,11 +395,11 @@ class ShortcutManager(QObject):
             self.main_window.move(current_x, current_y)
 
     def _toggle_window_visibility(self) -> None:
-        """Toggle main window visibility"""
+        """Toggle the main window visibility."""
         self.toggle_signal.emit()
 
     def _move_window_left(self) -> None:
-        """Move main window left"""
+        """Move the main window left."""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_x = max(
@@ -410,7 +409,7 @@ class ShortcutManager(QObject):
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
     def _move_window_right(self) -> None:
-        """Move main window right"""
+        """Move the main window right."""
         if self.animation_active and self.animation_progress < 0.5:
             return
         max_x = (
@@ -422,7 +421,7 @@ class ShortcutManager(QObject):
         self.move_signal.emit(new_x, self.main_window.geometry().y())
 
     def _move_window_up(self) -> None:
-        """Move main window up"""
+        """Move the main window up."""
         if self.animation_active and self.animation_progress < 0.5:
             return
         new_y = max(
@@ -432,7 +431,7 @@ class ShortcutManager(QObject):
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
     def _move_window_down(self) -> None:
-        """Move main window down"""
+        """Move the main window down."""
         if self.animation_active and self.animation_progress < 0.5:
             return
         max_y = (
@@ -444,27 +443,27 @@ class ShortcutManager(QObject):
         self.move_signal.emit(self.main_window.geometry().x(), new_y)
 
     def _scroll_up(self) -> None:
-        """Scroll up in the chat area"""
+        """Scroll up in the chat area."""
         self.scroll_signal.emit(-100)
 
     def _scroll_down(self) -> None:
-        """Scroll down in the chat area"""
+        """Scroll down in the chat area."""
         self.scroll_signal.emit(100)
 
     def _close_app(self) -> None:
-        """Close the application"""
+        """Close the application."""
         self.quit_signal.emit()  # Must emit signal to run on main thread
 
     def _screenshot(self) -> None:
-        """Take a screenshot of the primary screen"""
+        """Take a screenshot of the primary screen."""
         self.screenshot_signal.emit()
 
     def _minimize(self) -> None:
-        """Minimize the main window"""
+        """Minimize the main window."""
         self.minimize_signal.emit()
 
     def _clear_all_chat(self) -> None:
-        """Clear the chat history"""
+        """Clear the chat history."""
         self.clear_all_chat_signal.emit()
 
     def _generate_with_screenshot(self) -> None:

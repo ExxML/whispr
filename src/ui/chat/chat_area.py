@@ -18,7 +18,7 @@ FADE_HEIGHT = 20
 
 
 class ChatArea(QScrollArea):
-    """Scrollable chat area for displaying message history."""
+    """Display message history in a scrollable chat area."""
 
     def __init__(self, main_window: QWidget) -> None:
         super().__init__(main_window)
@@ -215,6 +215,9 @@ class ChatArea(QScrollArea):
 
         Accumulates the running animation target so rapid wheel spins
         chain naturally instead of restarting from the current position.
+
+        Args:
+            event (QWheelEvent): The wheel event that drives the scroll delta.
         """
         if event is None:
             return
@@ -258,7 +261,7 @@ class ChatArea(QScrollArea):
 
 
 class _FadeOverlay(QGraphicsEffect):
-    """Fades the top and bottom edges of a widget to transparent."""
+    """Fade the top and bottom edges of a widget to transparent."""
 
     def __init__(
         self, fade_height: int = FADE_HEIGHT, parent: QObject | None = None
@@ -269,7 +272,11 @@ class _FadeOverlay(QGraphicsEffect):
         self.show_bottom = False
 
     def draw(self, painter: QPainter | None) -> None:
-        """Draw the source widget with faded top and bottom edges."""
+        """Draw the source widget with faded top and bottom edges.
+
+        Args:
+            painter (QPainter): The painter used to render the effect output.
+        """
         if painter is None:
             return
 

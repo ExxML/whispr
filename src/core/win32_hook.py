@@ -61,6 +61,8 @@ KEYEVENTF_EXTENDEDKEY = 0x01
 
 # Win32 structure for low-level keyboard hook data
 class KBDLLHOOKSTRUCT(ctypes.Structure):
+    """Represent low-level keyboard hook event data from Win32."""
+
     _fields_ = [
         ("vkCode", ctypes.wintypes.DWORD),
         ("scanCode", ctypes.wintypes.DWORD),

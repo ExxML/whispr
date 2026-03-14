@@ -18,7 +18,7 @@ DEFAULT_MODEL = MODELS[2][1]
 
 
 class AISender:
-    """Handles sending user input to Gemini via a persistent chat session."""
+    """Send user input to Gemini via a persistent chat session."""
 
     def __init__(self) -> None:
         # Load environment variables from the .env file

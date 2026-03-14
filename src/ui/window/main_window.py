@@ -15,7 +15,7 @@ from core.screenshot_manager import ScreenshotManager
 
 
 class MainWindow(QWidget):
-    """Main application window containing the chat area, input field, and title bar buttons."""
+    """Render the main application window and its chat controls."""
 
     BG_COLOR = QColor(20, 20, 20, 153)
 
@@ -39,8 +39,7 @@ class MainWindow(QWidget):
             self.raise_()  # Bring to front
 
     def hide(self) -> None:
-        """Close the model popup and update the backing store before hiding
-        so the popup does not flash when re-showing."""
+        """Close the model popup and flush the backing store before hiding."""
         if hasattr(self, "input_field"):
             self.input_field.input_settings.model_dropdown.close_popup()
             self.repaint()
@@ -71,13 +70,17 @@ class MainWindow(QWidget):
             app.quit()
 
     def resizeEvent(self, event: QResizeEvent | None) -> None:
-        """Reposition the floating screenshot tray when the window is resized."""
+        """Reposition the floating screenshot tray when the window is resized.
+
+        Args:
+            event (QResizeEvent): The resize event passed to the base widget.
+        """
         super().resizeEvent(event)
         self._position_screenshot_tray()
 
     # Override mousePressEvent to automatically set focus to input field
     def mousePressEvent(self, event: QMouseEvent | None) -> None:
-        """Handle mouse press events by setting focus to the input field.
+        """Set focus to the input field when the window is clicked.
 
         Args:
             event (QMouseEvent): The mouse press event.
@@ -247,7 +250,7 @@ class MainWindow(QWidget):
         self.screenshot_tray.clear()
 
     def _position_screenshot_tray(self) -> None:
-        """Place the screenshot tray above the input field, floating over the chat area."""
+        """Place the screenshot tray above the input field."""
         tray = self.screenshot_tray
         tray_h = tray.height()
         tray.setGeometry(

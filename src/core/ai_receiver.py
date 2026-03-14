@@ -7,7 +7,7 @@ from ui.chat.chat_area import ChatArea
 
 
 class AIReceiver(QObject):
-    """Handles AI response streaming and chat area updates."""
+    """Handle AI response streaming and chat area updates."""
 
     # Signals for cross-thread communication
     # Using threading instead of QThread due to compilation issues with Nuitka

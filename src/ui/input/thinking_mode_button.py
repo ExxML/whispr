@@ -13,10 +13,10 @@ from PyQt6.QtWidgets import QWidget
 
 
 class ThinkingModeButton(QWidget):
-    """Button to toggle AI thinking mode on/off.
+    """Toggle AI thinking mode on and off.
 
-    Renders the thinking_mode_button.png icon at the specified opacity. When active, a
-    semi-transparent yellow circle fades in behind the icon to indicate thinking mode is enabled.
+    Render the thinking_mode_button.png icon at the configured opacity. When
+    active, fade a semi-transparent yellow circle in behind the icon.
     """
 
     thinking_mode_changed = pyqtSignal(bool)
@@ -63,7 +63,11 @@ class ThinkingModeButton(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
     def mousePressEvent(self, event: QMouseEvent | None) -> None:
-        """Toggle thinking mode and animate the overlay on click."""
+        """Toggle thinking mode and animate the overlay on click.
+
+        Args:
+            event (QMouseEvent): The mouse press event that triggered the toggle.
+        """
         if event is None:
             return
 
@@ -77,7 +81,7 @@ class ThinkingModeButton(QWidget):
         self.thinking_mode_changed.emit(self._active)
 
     def paintEvent(self, _event: QPaintEvent | None) -> None:
-        """Draw the yellow circle overlay and the icon at 50% opacity."""
+        """Draw the thinking-mode overlay, outline, and icon."""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)

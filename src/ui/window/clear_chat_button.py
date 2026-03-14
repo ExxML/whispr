@@ -9,7 +9,7 @@ from ui.chat.chat_area import ChatArea
 
 
 class ClearChatButton(QPushButton):
-    """Button in the title bar to clear the chat history."""
+    """Clear the chat history from the title bar."""
 
     def __init__(
         self, main_window: QWidget, on_click: Callable[[], None], chat_area: ChatArea
@@ -42,7 +42,7 @@ class ClearChatButton(QPushButton):
 
     # Override to change icon on hover
     def enterEvent(self, event: QEnterEvent | None) -> None:
-        """Change the button icon to the dark variant on mouse hover.
+        """Change the button icon to the dark variant on hover.
 
         Args:
             event (QEnterEvent): The mouse enter event.
@@ -52,7 +52,7 @@ class ClearChatButton(QPushButton):
 
     # Override to change icon when not on hover
     def leaveEvent(self, event: QEvent | None) -> None:
-        """Restore the button icon to the light variant when mouse leaves.
+        """Restore the button icon to the light variant when hover ends.
 
         Args:
             event (QEvent): The mouse leave event.

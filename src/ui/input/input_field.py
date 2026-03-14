@@ -6,7 +6,7 @@ from ui.input.input_settings import InputSettings
 
 
 class InputField(QWidget):
-    """Input bar with a text field."""
+    """Render the input bar and message field."""
 
     message_sent = pyqtSignal(str)
     model_changed = pyqtSignal(str)
@@ -110,12 +110,16 @@ class InputField(QWidget):
             self.input_field.setFocus()
 
     def _set_enabled(self, enabled: bool) -> None:
-        """Enable or disable the input field."""
+        """Enable or disable the input field.
+
+        Args:
+            enabled (bool): Whether the input field should accept user input.
+        """
         self.input_field.setEnabled(enabled)
 
 
 class _AutoResizeTextEdit(QTextEdit):
-    """A QTextEdit that automatically resizes its height to fit its content."""
+    """Resize a text edit automatically to fit its content."""
 
     height_changed = pyqtSignal(int)
     send_requested = pyqtSignal()
@@ -133,7 +137,11 @@ class _AutoResizeTextEdit(QTextEdit):
         QTimer.singleShot(0, self._adjust_height)
 
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
-        """Send on plain Enter; insert newline on Shift+Enter."""
+        """Send the message on Enter and insert a newline on Shift+Enter.
+
+        Args:
+            event (QKeyEvent): The key event being handled.
+        """
         if (
             event is not None
             and event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter)

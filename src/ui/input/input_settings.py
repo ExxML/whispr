@@ -6,7 +6,7 @@ from ui.input.thinking_mode_button import ThinkingModeButton
 
 
 class InputSettings(QWidget):
-    """Settings row displayed below the message input field."""
+    """Display the settings row below the message input field."""
 
     model_changed = pyqtSignal(str)
     thinking_mode_changed = pyqtSignal(bool)

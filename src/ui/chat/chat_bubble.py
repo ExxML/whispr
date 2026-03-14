@@ -8,7 +8,7 @@ from ui.chat.ai_formatter import format_message
 
 
 class ChatBubble(QWidget):
-    """A chat bubble widget for displaying messages"""
+    """Render a chat bubble for displaying messages."""
 
     def __init__(self, message: str, is_user: bool = False) -> None:
         super().__init__()

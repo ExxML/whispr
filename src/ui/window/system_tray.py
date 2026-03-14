@@ -8,7 +8,7 @@ from core.shortcut_manager import ShortcutManager
 
 
 class SystemTray(QSystemTrayIcon):
-    """System tray icon for toggling the main window and quitting the app."""
+    """Manage the system tray icon for the main window."""
 
     def __init__(
         self, main_window: MainWindow, shortcut_manager: ShortcutManager

@@ -20,7 +20,7 @@ ITEM_VERTICAL_PADDING = 6
 
 
 class ModelDropdown(QWidget):
-    """Custom dropdown button for selecting the active Gemini model."""
+    """Select the active Gemini model with a custom dropdown button."""
 
     model_changed = pyqtSignal(str)
 
@@ -40,8 +40,7 @@ class ModelDropdown(QWidget):
             self.popup.close()
 
     def reposition_popup(self, delta: int) -> None:
-        """Shift the popup and shield vertically by the given delta.
-        Used for keeping the popup aligned with the dropdown button when the input field height changes.
+        """Shift the popup and shield vertically to keep them aligned.
 
         Args:
             delta (int): The number of pixels to move the popup downward.
@@ -55,7 +54,15 @@ class ModelDropdown(QWidget):
             self.shield.setGeometry(new_geometry)
 
     def eventFilter(self, watched: QObject | None, event: QEvent | None) -> bool:
-        """Close the popup on a mouse press outside it or when the window loses focus."""
+        """Close the popup on an outside click or window deactivation.
+
+        Args:
+            watched (QObject): The object being filtered.
+            event (QEvent): The event being processed.
+
+        Returns:
+            bool: Return whether the base class handled the event.
+        """
         if event is not None and self.popup is not None:
             if event.type() == QEvent.Type.MouseButtonPress and isinstance(
                 event, QMouseEvent
@@ -70,7 +77,11 @@ class ModelDropdown(QWidget):
         return super().eventFilter(watched, event)
 
     def mousePressEvent(self, event: QMouseEvent | None) -> None:
-        """Toggle the model selection popup on click."""
+        """Toggle the model selection popup on click.
+
+        Args:
+            event (QMouseEvent): The mouse press event that triggered the toggle.
+        """
         if event is None:
             return
 
@@ -139,7 +150,12 @@ class ModelDropdown(QWidget):
         app.installEventFilter(self)
 
     def _on_model_selected(self, display_name: str, model_id: str) -> None:
-        """Handle a model selection from the popup."""
+        """Handle a model selection from the popup.
+
+        Args:
+            display_name (str): The model name shown in the dropdown.
+            model_id (str): The Gemini model identifier.
+        """
         self.current_display = display_name
         self.current_model_id = model_id
         self.update()
@@ -157,7 +173,7 @@ class ModelDropdown(QWidget):
 
 
 class _ModelPopup(QWidget):
-    """Frameless popup widget for selecting a Gemini model."""
+    """Display a frameless popup for selecting a Gemini model."""
 
     model_selected = pyqtSignal(str, str)
     closed = pyqtSignal()
@@ -168,12 +184,20 @@ class _ModelPopup(QWidget):
         self._init_UI(current_model_id)
 
     def closeEvent(self, event: QCloseEvent | None) -> None:
-        """Emit the closed signal when the popup is closing."""
+        """Emit the closed signal when the popup is closing.
+
+        Args:
+            event (QCloseEvent): The close event passed to the base widget.
+        """
         self.closed.emit()
         super().closeEvent(event)
 
     def keyPressEvent(self, event: QKeyEvent | None) -> None:
-        """Close the popup on Escape key press."""
+        """Close the popup on Escape key press.
+
+        Args:
+            event (QKeyEvent): The key event being processed.
+        """
         if event is not None and event.key() == Qt.Key.Key_Escape:
             self.close()
             return
@@ -193,7 +217,11 @@ class _ModelPopup(QWidget):
         painter.end()
 
     def _init_UI(self, current_model_id: str) -> None:
-        """Build the list of model items."""
+        """Build the list of model items.
+
+        Args:
+            current_model_id (str): The identifier of the currently selected model.
+        """
         layout = QVBoxLayout(self)
         layout.setContentsMargins(1, 1, 1, 1)
         layout.setSpacing(0)
@@ -213,13 +241,18 @@ class _ModelPopup(QWidget):
             layout.addWidget(item)
 
     def _on_item_clicked(self, display_name: str, model_id: str) -> None:
-        """Forward the selection and close the popup."""
+        """Forward the selection and close the popup.
+
+        Args:
+            display_name (str): The model name selected by the user.
+            model_id (str): The Gemini model identifier selected by the user.
+        """
         self.model_selected.emit(display_name, model_id)
         self.close()
 
 
 class _PopupShield(QWidget):
-    """Clears the main window content behind the popup so app UI does not bleed through."""
+    """Clear the main window content behind the popup."""
 
     def paintEvent(self, _event: QPaintEvent | None) -> None:
         """Erase the backing store pixels to transparent with rounded corners."""
@@ -234,7 +267,7 @@ class _PopupShield(QWidget):
 
 
 class _ModelItem(QWidget):
-    """Individual model option within the selection popup."""
+    """Render an individual model option within the selection popup."""
 
     clicked = pyqtSignal(str, str)
 
@@ -246,12 +279,12 @@ class _ModelItem(QWidget):
         self.is_hovered = False
         self._init_UI()
 
-    def enterEvent(self, event: QEnterEvent | None) -> None:
+    def enterEvent(self, _event: QEnterEvent | None) -> None:
         """Highlight the item on mouse hover."""
         self.is_hovered = True
         self.update()
 
-    def leaveEvent(self, event: QEvent | None) -> None:
+    def leaveEvent(self, _event: QEvent | None) -> None:
         """Remove highlight when mouse leaves."""
         self.is_hovered = False
         self.update()
