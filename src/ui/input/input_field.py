@@ -39,7 +39,9 @@ class InputField(QWidget):
         """)
 
         input_container_layout = QVBoxLayout(self.input_container)
-        input_container_layout.setContentsMargins(8, 8, 8, 5)  # Smaller bottom margin due to vertically centered InputSettings row
+        input_container_layout.setContentsMargins(
+            8, 8, 8, 5
+        )  # Smaller bottom margin due to vertically centered InputSettings row
         input_container_layout.setSpacing(0)
 
         self.input_field = _AutoResizeTextEdit()
