@@ -1,7 +1,6 @@
 from PyQt6.QtCore import QEvent, QObject, QPoint, QRect, QRectF, Qt, pyqtSignal
 from PyQt6.QtGui import (
     QCloseEvent,
-    QColor,
     QEnterEvent,
     QFontMetrics,
     QKeyEvent,
@@ -14,6 +13,7 @@ from PyQt6.QtGui import (
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QWidget
 
 from core.ai_sender import DEFAULT_MODEL, MODELS
+from ui.theme import BG_COLOR, PRIMARY_COLOR, qcolor
 
 ITEM_HORIZONTAL_PADDING = 8
 ITEM_VERTICAL_PADDING = 6
@@ -94,7 +94,7 @@ class ModelDropdown(QWidget):
     def paintEvent(self, _event: QPaintEvent | None) -> None:
         """Draw the current model name right-aligned."""
         painter = QPainter(self)
-        painter.setPen(QColor(255, 255, 255, 128))
+        painter.setPen(qcolor(PRIMARY_COLOR, 128))
         painter.setFont(self.font())
         painter.drawText(
             QRect(0, 0, self.width(), self.height()),
@@ -212,8 +212,8 @@ class _ModelPopup(QWidget):
         path = QPainterPath()
         path.addRoundedRect(rect, 8, 8)
 
-        painter.fillPath(path, QColor(20, 20, 20, 153))
-        painter.strokePath(path, QPen(QColor(255, 255, 255, 128), 1))
+        painter.fillPath(path, qcolor(BG_COLOR, 153))
+        painter.strokePath(path, QPen(qcolor(PRIMARY_COLOR, 128), 1))
         painter.end()
 
     def _init_UI(self, current_model_id: str) -> None:
@@ -309,12 +309,12 @@ class _ModelItem(QWidget):
             )
             path = QPainterPath()
             path.addRoundedRect(popup_rect, 8, 8)
-            painter.fillPath(path, QColor(255, 255, 255, 25))
+            painter.fillPath(path, qcolor(PRIMARY_COLOR, 25))
             # Set text colour to max opacity
-            painter.setPen(QColor(255, 255, 255, 255))
+            painter.setPen(qcolor(PRIMARY_COLOR, 255))
         else:
             # Set text colour to lower opacity
-            painter.setPen(QColor(255, 255, 255, 128))
+            painter.setPen(qcolor(PRIMARY_COLOR, 128))
 
         painter.setFont(self.font())
         text_rect = QRect(

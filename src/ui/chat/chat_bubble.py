@@ -5,6 +5,7 @@ from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QWidget
 
 from ui.chat.ai_formatter import format_message
+from ui.theme import PRIMARY_COLOR, qss
 
 
 class ChatBubble(QWidget):
@@ -62,14 +63,14 @@ class ChatBubble(QWidget):
         # Style the bubble based on sender
         if self.is_user:
             # User messages: light gray, aligned right
-            self.message_label.setStyleSheet("""
-                QLabel {
-                    color: rgba(255, 255, 255, 255);
+            self.message_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {qss(PRIMARY_COLOR, 255)};
                     background-color: transparent;
-                    border: 1px solid rgba(255, 255, 255, 255);
+                    border: 1px solid {qss(PRIMARY_COLOR, 255)};
                     border-radius: 8px;
                     padding: 5px 4px -3px 5px;  /* top, right, bottom, left */
-                }
+                }}
             """)  # padding adjusted to visually center text within the bubble
 
             # Let Qt estimate the natural width of the message, then word wrap if necessary
@@ -86,12 +87,12 @@ class ChatBubble(QWidget):
             layout.addWidget(self.message_label)
         else:
             # Bot messages: transparent, aligned left
-            self.message_label.setStyleSheet("""
-                QLabel {
-                    color: rgba(255, 255, 255, 255);
+            self.message_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {qss(PRIMARY_COLOR, 255)};
                     background-color: transparent;
                     padding: 0px 0px 0px 1px;  /* top, right, bottom, left */
-                }
+                }}
             """)
             self.message_label.setAlignment(
                 Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft

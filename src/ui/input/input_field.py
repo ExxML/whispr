@@ -3,6 +3,7 @@ from PyQt6.QtGui import QFont, QKeyEvent
 from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QTextEdit, QVBoxLayout, QWidget
 
 from ui.input.input_settings import InputSettings
+from ui.theme import PRIMARY_COLOR, qss
 
 
 class InputField(QWidget):
@@ -30,12 +31,12 @@ class InputField(QWidget):
         self.input_container = QWidget()
         self.input_container.setObjectName("inputContainer")
         self.input_container.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
-        self.input_container.setStyleSheet("""
-            QWidget#inputContainer {
+        self.input_container.setStyleSheet(f"""
+            QWidget#inputContainer {{
                 background-color: transparent;
-                border: 1px solid rgba(255, 255, 255, 128);
+                border: 1px solid {qss(PRIMARY_COLOR, 128)};
                 border-radius: 14px;
-            }
+            }}
         """)
 
         input_container_layout = QVBoxLayout(self.input_container)
@@ -57,13 +58,13 @@ class InputField(QWidget):
         self.input_field.setFont(font)
 
         # Text edit is transparent; the container provides the visual frame
-        self.input_field.setStyleSheet("""
-            QTextEdit {
+        self.input_field.setStyleSheet(f"""
+            QTextEdit {{
                 background-color: transparent;
-                color: rgba(255, 255, 255, 255);
+                color: {qss(PRIMARY_COLOR, 255)};
                 border: none;
                 padding: 2px 6px 2px 6px;  /* top, right, bottom, left */
-            }
+            }}
         """)
         scrollbar = self.input_field.verticalScrollBar()
         assert scrollbar is not None

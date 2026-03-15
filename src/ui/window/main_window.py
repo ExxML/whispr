@@ -2,22 +2,23 @@ import ctypes
 from ctypes import wintypes
 
 from PyQt6.QtCore import QPoint, Qt, QTimer
-from PyQt6.QtGui import QColor, QMouseEvent, QPainter, QPaintEvent, QPen, QResizeEvent
+from PyQt6.QtGui import QMouseEvent, QPainter, QPaintEvent, QPen, QResizeEvent
 from PyQt6.QtWidgets import QApplication, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
 
-from ui.chat.chat_area import ChatArea
-from ui.window.clear_chat_button import ClearChatButton
-from ui.input.input_field import InputField
-from ui.window.screenshot_tray import ScreenshotTray
 from core.ai_receiver import AIReceiver
 from core.ai_sender import AISender
 from core.screenshot_manager import ScreenshotManager
+from ui.chat.chat_area import ChatArea
+from ui.input.input_field import InputField
+from ui.theme import BG_COLOR, PRIMARY_COLOR, qcolor, qss
+from ui.window.clear_chat_button import ClearChatButton
+from ui.window.screenshot_tray import ScreenshotTray
 
 
 class MainWindow(QWidget):
     """Render the main application window and its chat controls."""
 
-    BG_COLOR = QColor(20, 20, 20, 153)
+    BG_COLOR = qcolor(BG_COLOR, 153)
 
     def __init__(
         self, ai_sender: AISender, screenshot_manager: ScreenshotManager
@@ -107,7 +108,7 @@ class MainWindow(QWidget):
             border_width, border_width, -border_width, -border_width
         )
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPen(QPen(QColor(255, 255, 255, 128), border_width))
+        painter.setPen(QPen(qcolor(PRIMARY_COLOR, 128), border_width))
         painter.drawRoundedRect(border_rect, radius, radius)
 
     def _init_UI(self) -> None:
@@ -166,42 +167,42 @@ class MainWindow(QWidget):
         self.min_btn = QPushButton("–", self)
         self.min_btn.setFixedSize(36, 32)
         self.min_btn.clicked.connect(self.hide)
-        self.min_btn.setStyleSheet("""
-            QPushButton {
-                color: rgba(255, 255, 255, 77);
+        self.min_btn.setStyleSheet(f"""
+            QPushButton {{
+                color: {qss(PRIMARY_COLOR, 77)};
                 border: none;
                 font-size: 24px;
                 font-weight: bold;
                 padding-bottom: 3px;
                 text-align: center;
-            }
-            QPushButton:hover {
-                background-color: rgba(255, 255, 255, 128);
+            }}
+            QPushButton:hover {{
+                background-color: {qss(PRIMARY_COLOR, 128)};
                 color: rgba(0, 0, 0, 153);
                 border-radius: 0px;
                 margin-top: 1px;
-            }
+            }}
         """)
         self.close_btn = QPushButton("×", self)
         self.close_btn.setFixedSize(36, 32)
         self.close_btn.clicked.connect(self.quit_app)
-        self.close_btn.setStyleSheet("""
-            QPushButton {
-                color: rgba(255, 255, 255, 77);
+        self.close_btn.setStyleSheet(f"""
+            QPushButton {{
+            color: {qss(PRIMARY_COLOR, 77)};
                 border: none;
                 font-size: 24px;
                 font-weight: bold;
                 padding-bottom: 3px;
                 text-align: center;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: rgba(255, 77, 69, 128);
                 color: rgba(0, 0, 0, 153);
                 border-radius: 0px;
                 border-top-right-radius: 7px;
                 margin-top: 1px;
                 margin-right: 1px;
-            }
+            }}
         """)
         header_layout.addWidget(self.min_btn)
         header_layout.addWidget(self.close_btn)
