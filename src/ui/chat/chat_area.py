@@ -192,10 +192,13 @@ class ChatArea(QScrollArea):
         )
 
     def _update_fade_visibility(self) -> None:
-        """Show or hide each fade edge based on the current scroll position."""
+        """Scale each fade edge based on distance from the nearest scroll edge."""
         sb = self.scrollbar
-        self.fade_effect.show_top = sb.value() > sb.minimum()
-        self.fade_effect.show_bottom = sb.value() < sb.maximum()
+        fade_start = self.fade_effect.FADE_START_DIST
+        top_dist = sb.value() - sb.minimum()
+        bottom_dist = sb.maximum() - sb.value()
+        self.fade_effect.top_strength = min(1.0, max(0.0, top_dist / fade_start))
+        self.fade_effect.bottom_strength = min(1.0, max(0.0, bottom_dist / fade_start))
         self.fade_effect.update()
 
     def _reset_stream(self) -> None:
@@ -263,16 +266,17 @@ class _FadeOverlay(QGraphicsEffect):
     """Fade the top and bottom edges of a widget to transparent."""
 
     FADE_HEIGHT = 30
+    FADE_START_DIST = FADE_HEIGHT // 2
     FADE_STEPS = 10
     FADE_EXPONENT = 2.5
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self.show_top = False
-        self.show_bottom = False
+        self.top_strength = 0.0
+        self.bottom_strength = 0.0
 
     def _set_exponential_stops(
-        self, gradient: QLinearGradient, *, edge_at_start: bool
+        self, gradient: QLinearGradient, *, edge_at_start: bool, strength: float
     ) -> None:
         """Populate gradient stops every 0.1 with exponential edge fade."""
         scale = exp(self.FADE_EXPONENT) - 1.0
@@ -280,7 +284,10 @@ class _FadeOverlay(QGraphicsEffect):
         for step in range(self.FADE_STEPS + 1):
             position = step / self.FADE_STEPS
             distance = position if edge_at_start else 1.0 - position
-            alpha = round(255 * ((exp(self.FADE_EXPONENT * distance) - 1.0) / scale))
+            full_fade_alpha = round(
+                255 * ((exp(self.FADE_EXPONENT * distance) - 1.0) / scale)
+            )
+            alpha = round(255 - strength * (255 - full_fade_alpha))
             gradient.setColorAt(position, QColor(0, 0, 0, alpha))
 
     def draw(self, painter: QPainter | None) -> None:
@@ -313,14 +320,22 @@ class _FadeOverlay(QGraphicsEffect):
                 QPainter.CompositionMode.CompositionMode_DestinationIn
             )
 
-            if self.show_top:
+            if self.top_strength > 0.0:
                 top_gradient = QLinearGradient(0, 0, 0, fade_px)
-                self._set_exponential_stops(top_gradient, edge_at_start=True)
+                self._set_exponential_stops(
+                    top_gradient,
+                    edge_at_start=True,
+                    strength=self.top_strength,
+                )
                 fade_painter.fillRect(QRectF(0, 0, width, fade_px), top_gradient)
 
-            if self.show_bottom:
+            if self.bottom_strength > 0.0:
                 bottom_gradient = QLinearGradient(0, height - fade_px, 0, height)
-                self._set_exponential_stops(bottom_gradient, edge_at_start=False)
+                self._set_exponential_stops(
+                    bottom_gradient,
+                    edge_at_start=False,
+                    strength=self.bottom_strength,
+                )
                 fade_painter.fillRect(
                     QRectF(0, height - fade_px, width, fade_px),
                     bottom_gradient,
