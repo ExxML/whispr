@@ -1,3 +1,5 @@
+from math import exp
+
 from PyQt6.QtCore import (
     QAbstractAnimation,
     QEasingCurve,
@@ -12,9 +14,6 @@ from PyQt6.QtGui import QColor, QLinearGradient, QPainter, QPixmap, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsEffect, QScrollArea, QVBoxLayout, QWidget
 
 from ui.chat.chat_bubble import ChatBubble
-
-
-FADE_HEIGHT = 20
 
 
 class ChatArea(QScrollArea):
@@ -263,13 +262,26 @@ class ChatArea(QScrollArea):
 class _FadeOverlay(QGraphicsEffect):
     """Fade the top and bottom edges of a widget to transparent."""
 
-    def __init__(
-        self, fade_height: int = FADE_HEIGHT, parent: QObject | None = None
-    ) -> None:
+    FADE_HEIGHT = 30
+    FADE_STEPS = 10
+    FADE_EXPONENT = 2.5
+
+    def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
-        self.fade_height = fade_height
         self.show_top = False
         self.show_bottom = False
+
+    def _set_exponential_stops(
+        self, gradient: QLinearGradient, *, edge_at_start: bool
+    ) -> None:
+        """Populate gradient stops every 0.1 with exponential edge fade."""
+        scale = exp(self.FADE_EXPONENT) - 1.0
+
+        for step in range(self.FADE_STEPS + 1):
+            position = step / self.FADE_STEPS
+            distance = position if edge_at_start else 1.0 - position
+            alpha = round(255 * ((exp(self.FADE_EXPONENT * distance) - 1.0) / scale))
+            gradient.setColorAt(position, QColor(0, 0, 0, alpha))
 
     def draw(self, painter: QPainter | None) -> None:
         """Draw the source widget with faded top and bottom edges.
@@ -293,7 +305,7 @@ class _FadeOverlay(QGraphicsEffect):
         dpr = pixmap.devicePixelRatio()
         height = pixmap.height() / dpr
         width = pixmap.width() / dpr
-        fade_px = float(self.fade_height)
+        fade_px = float(self.FADE_HEIGHT)
 
         if height > 2 * fade_px:
             fade_painter = QPainter(pixmap)
@@ -303,14 +315,12 @@ class _FadeOverlay(QGraphicsEffect):
 
             if self.show_top:
                 top_gradient = QLinearGradient(0, 0, 0, fade_px)
-                top_gradient.setColorAt(0.0, QColor(0, 0, 0, 0))
-                top_gradient.setColorAt(1.0, QColor(0, 0, 0, 255))
+                self._set_exponential_stops(top_gradient, edge_at_start=True)
                 fade_painter.fillRect(QRectF(0, 0, width, fade_px), top_gradient)
 
             if self.show_bottom:
                 bottom_gradient = QLinearGradient(0, height - fade_px, 0, height)
-                bottom_gradient.setColorAt(0.0, QColor(0, 0, 0, 255))
-                bottom_gradient.setColorAt(1.0, QColor(0, 0, 0, 0))
+                self._set_exponential_stops(bottom_gradient, edge_at_start=False)
                 fade_painter.fillRect(
                     QRectF(0, height - fade_px, width, fade_px),
                     bottom_gradient,
